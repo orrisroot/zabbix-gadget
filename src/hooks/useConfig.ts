@@ -1,4 +1,5 @@
 import { listen } from '@tauri-apps/api/event';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { useEffect, useState } from 'react';
 import { useZabbixStore } from '@/hooks/useZabbix';
 import { getConfig } from '@/lib/zabbix-api';
@@ -7,6 +8,13 @@ import type { AppConfig } from '@/types/config';
 export function useConfig() {
   const { config, serverStatuses, refreshAll } = useZabbixStore();
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [isVisible, setIsVisible] = useState<boolean>(true);
+
+  // Check if current window is the main window
+  const isMainWindow =
+    typeof window !== 'undefined' &&
+    !window.location.search.includes('window=settings') &&
+    !window.location.search.includes('window=tooltip');
 
   useEffect(() => {
     console.log('useConfig: loading config...');
@@ -21,31 +29,65 @@ export function useConfig() {
     };
     loadAndSetConfig();
 
+    // Fetch initial visibility state dynamically
+    const checkInitialVisibility = async () => {
+      try {
+        const appWindow = getCurrentWebviewWindow();
+        const visible = await appWindow.isVisible();
+        console.log('useConfig: initial visibility check:', visible);
+        setIsVisible(visible);
+      } catch (err) {
+        console.error('Failed to get initial visibility:', err);
+      }
+    };
+
+    if (isMainWindow) {
+      checkInitialVisibility();
+    }
+
     // Listen for configuration updates from the settings window
-    const unlistenPromise = listen<AppConfig>('config-updated', (event) => {
+    const unlistenConfigPromise = listen<AppConfig>('config-updated', (event) => {
       console.log('useConfig: config updated event received:', event.payload);
       useZabbixStore.setState({ config: event.payload });
     });
 
-    return () => {
-      unlistenPromise.then((unlisten) => unlisten());
-    };
-  }, []);
+    let unlistenVisibility: (() => void) | null = null;
+    if (isMainWindow) {
+      // Only listen for window visibility changes on the main window
+      listen<boolean>('window-visibility', (event) => {
+        console.log('useConfig: window visibility changed:', event.payload);
+        setIsVisible(event.payload);
+      }).then((unlisten) => {
+        unlistenVisibility = unlisten;
+      });
+    }
 
+    return () => {
+      unlistenConfigPromise.then((unlisten) => unlisten());
+      if (unlistenVisibility) {
+        unlistenVisibility();
+      }
+    };
+  }, [isMainWindow]);
+
+  // Polling loop logic
   useEffect(() => {
-    if (!config?.servers.length) return;
+    // DO NOT poll if this is settings/tooltip window, or if the main window is hidden
+    if (!isMainWindow || !isVisible || !config?.servers.length) return;
 
     const doRefresh = async () => {
       await useZabbixStore.getState().refreshAll();
       setLastUpdate(new Date());
     };
 
+    // Refresh immediately upon window becoming visible / initialization
     doRefresh();
+
     const interval = config.settings.refresh_interval_seconds * 1000;
     const timer = setInterval(doRefresh, interval);
 
     return () => clearInterval(timer);
-  }, [config]);
+  }, [isMainWindow, isVisible, config?.settings.refresh_interval_seconds, config?.servers.length]);
 
   return { config, serverStatuses, refreshAll, lastUpdate };
 }

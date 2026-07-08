@@ -29,6 +29,7 @@ function TooltipPanel() {
       try {
         const appWin = getCurrentWebviewWindow();
         await appWin.hide();
+        setData(null); // Clear data to unmount pulse animations
       } catch (err) {
         console.error('Failed to hide tooltip window:', err);
       }

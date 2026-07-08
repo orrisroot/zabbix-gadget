@@ -5,7 +5,18 @@ mod zabbix;
 use tauri::generate_handler;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::Manager;
+use tauri::{Emitter, Manager};
+
+fn set_window_visibility(window: &tauri::WebviewWindow, visible: bool) -> Result<(), tauri::Error> {
+    if visible {
+        window.show()?;
+        window.set_focus()?;
+    } else {
+        window.hide()?;
+    }
+    let _ = window.emit("window-visibility", visible);
+    Ok(())
+}
 
 fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // Set up system tray menu items
@@ -32,12 +43,8 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
             {
                 let app = tray.app_handle();
                 if let Some(window) = app.get_webview_window("main") {
-                    if window.is_visible().unwrap_or(false) {
-                        let _ = window.hide();
-                    } else {
-                        let _ = window.show();
-                        let _ = window.set_focus();
-                    }
+                    let is_visible = window.is_visible().unwrap_or(false);
+                    let _ = set_window_visibility(&window, !is_visible);
                 }
             }
         })
@@ -47,8 +54,7 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
             }
             "show" => {
                 if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
+                    let _ = set_window_visibility(&window, true);
                 }
             }
             _ => {}
@@ -67,6 +73,7 @@ pub fn run() {
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 let _ = window.hide();
+                let _ = window.emit("window-visibility", false);
                 api.prevent_close();
             }
         })

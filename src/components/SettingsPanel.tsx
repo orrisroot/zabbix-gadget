@@ -243,7 +243,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
         style={{ padding: '10px 14px' }}
       >
         <div className="flex items-center gap-2 text-base text-slate-700 dark:text-slate-200 animate-fade-in">
-          <SettingsIcon size={18} className="text-indigo-450 dark:text-indigo-400 animate-pulse" />
+          <SettingsIcon size={18} className="text-indigo-450 dark:text-indigo-400" />
           <span className="font-extrabold text-slate-900 dark:text-slate-100">Settings</span>
         </div>
         <button
