@@ -1,17 +1,7 @@
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { useEffect, useRef, useState } from 'react';
-
-interface ZabbixTrigger {
-  triggerid: string;
-  description: string;
-  priority: string;
-  value: string;
-  lastchange: string;
-  error: string;
-  url: string;
-  hostname?: string;
-}
+import type { ZabbixTrigger } from '@/types/zabbix';
 
 interface TooltipData {
   label: string;

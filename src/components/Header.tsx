@@ -10,10 +10,9 @@ interface HeaderProps {
   onThemeToggle: () => void;
 }
 
-const appWindow = getCurrentWebviewWindow();
-
 function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps) {
   const { refreshAll } = useZabbixStore();
+  const appWindow = getCurrentWebviewWindow();
 
   const handleMouseDown = async (e: React.MouseEvent) => {
     if (e.button !== 0) return;

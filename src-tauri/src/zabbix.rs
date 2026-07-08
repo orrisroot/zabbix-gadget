@@ -31,9 +31,17 @@ pub struct ZabbixHost {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ZabbixError {
+    pub code: i32,
+    pub message: String,
+    pub data: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ZabbixApiResponse<T> {
     pub jsonrpc: String,
-    pub result: T,
+    pub result: Option<T>,
+    pub error: Option<ZabbixError>,
     pub id: u32,
 }
 
@@ -85,7 +93,15 @@ impl ZabbixClient {
             .json()
             .await?;
 
-        self.auth_token = Some(response.result);
+        if let Some(err) = response.error {
+            let err_msg = match err.data {
+                Some(data) => format!("Zabbix Error {}: {} ({})", err.code, err.message, data),
+                None => format!("Zabbix Error {}: {}", err.code, err.message),
+            };
+            return Err(err_msg.into());
+        }
+
+        self.auth_token = Some(response.result.ok_or("Empty result from Zabbix login")?);
         Ok(())
     }
 
@@ -123,6 +139,14 @@ impl ZabbixClient {
             .json()
             .await?;
 
-        Ok(response.result)
+        if let Some(err) = response.error {
+            let err_msg = match err.data {
+                Some(data) => format!("Zabbix Error {}: {} ({})", err.code, err.message, data),
+                None => format!("Zabbix Error {}: {}", err.code, err.message),
+            };
+            return Err(err_msg.into());
+        }
+
+        Ok(response.result.ok_or("Empty result from Zabbix fetch")?)
     }
 }

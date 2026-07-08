@@ -1,16 +1,8 @@
 import { open } from '@tauri-apps/plugin-shell';
 import TriggerCell from '@/components/TriggerCell';
+import type { ServerStatus } from '@/hooks/useZabbix';
 import type { ServerConfig } from '@/types/config';
-import { PRIORITY_ORDER, type ZabbixTrigger } from '@/types/zabbix';
-
-interface ServerStatus {
-  label: string;
-  triggers: Map<string, number>;
-  triggerDetails: Map<string, ZabbixTrigger[]>;
-  error: string | null;
-  lastUpdate: number;
-  loading: boolean;
-}
+import { PRIORITY_ORDER } from '@/types/zabbix';
 
 interface TriggerTableProps {
   server: ServerConfig;

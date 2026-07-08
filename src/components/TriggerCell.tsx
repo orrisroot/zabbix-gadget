@@ -1,7 +1,7 @@
 import { LogicalPosition } from '@tauri-apps/api/dpi';
 import { emit } from '@tauri-apps/api/event';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { type MouseEvent, useRef } from 'react';
+import type { MouseEvent } from 'react';
 import { PRIORITY_MAP, type ZabbixTrigger } from '@/types/zabbix';
 
 interface TriggerCellProps {
@@ -15,8 +15,6 @@ interface TriggerCellProps {
 }
 
 function TriggerCell({ priority, status, isError, isLoading }: TriggerCellProps) {
-  const cellRef = useRef<HTMLTableCellElement>(null);
-
   const count = status?.triggers.get(priority) ?? 0;
   const details = status?.triggerDetails.get(priority) ?? [];
   const priorityInfo = PRIORITY_MAP[priority] || {
@@ -109,7 +107,6 @@ function TriggerCell({ priority, status, isError, isLoading }: TriggerCellProps)
 
   return (
     <td
-      ref={cellRef}
       className={`text-center py-2 rounded-sm cursor-pointer font-bold transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 shadow-sm ${getStatusClass()} ${getCellTextColor()}`}
       onMouseEnter={(e) => handleMouseEnter(e)}
       onMouseMove={(e) => handleMouseMove(e)}

@@ -71,7 +71,9 @@ pub fn run() {
             }
         })
         .setup(|app| {
-            let _ = config::init_config(app);
+            if let Err(e) = config::init_config(app) {
+                log::error!("Failed to initialize config: {}", e);
+            }
             setup_system_tray(app)?;
             Ok(())
         })

@@ -20,13 +20,12 @@ import { useZabbixStore } from '@/hooks/useZabbix';
 import { loginServer, saveConfig } from '@/lib/zabbix-api';
 import type { ServerConfig } from '@/types/config';
 
-const appWindow = getCurrentWebviewWindow();
-
 interface SettingsPanelProps {
   onClose: () => void;
 }
 
 function SettingsPanel({ onClose }: SettingsPanelProps) {
+  const appWindow = getCurrentWebviewWindow();
   const { config } = useZabbixStore();
   const [servers, setServers] = useState<ServerConfig[]>(config?.servers ?? []);
   const [refreshInterval, setRefreshInterval] = useState<number>(config?.settings.refresh_interval_seconds ?? 300);
@@ -45,10 +44,12 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     [key: string]: 'idle' | 'loading' | 'ok' | 'error';
   }>({});
   const [formTestStatus, setFormTestStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
+  const [formErrorMessage, setFormErrorMessage] = useState<string | null>(null);
 
   // Reset form test status when inputs change
   useEffect(() => {
     setFormTestStatus('idle');
+    setFormErrorMessage(null);
   }, [formLabel, formHost, formUser, formPass]);
 
   // Sync local states with config when it is loaded or updated in the store
@@ -80,6 +81,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     setFormPass('');
     setEditIndex(null);
     setFormTestStatus('idle');
+    setFormErrorMessage(null);
   };
 
   const handleEdit = (idx: number) => {
@@ -141,6 +143,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
   const handleTestFormServer = async () => {
     if (!formHost.trim()) return;
     setFormTestStatus('loading');
+    setFormErrorMessage(null);
     try {
       const serverToTest: ServerConfig = {
         label: formLabel.trim() || 'Test Connection',
@@ -149,9 +152,15 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
         pass: formPass.trim(),
       };
       const ok = await loginServer(serverToTest);
-      setFormTestStatus(ok ? 'ok' : 'error');
-    } catch {
+      if (ok) {
+        setFormTestStatus('ok');
+      } else {
+        setFormTestStatus('error');
+        setFormErrorMessage('Login failed: Invalid credentials or empty response');
+      }
+    } catch (err) {
       setFormTestStatus('error');
+      setFormErrorMessage(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -391,6 +400,11 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                 style={{ padding: '4px 8px' }}
               />
             </div>
+            {formErrorMessage && (
+              <div className="text-[11px] text-rose-600 dark:text-rose-400 font-bold px-1 py-0.5 break-all">
+                {formErrorMessage}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 justify-between items-center mt-0.5">

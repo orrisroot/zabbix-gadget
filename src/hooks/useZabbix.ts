@@ -3,7 +3,7 @@ import { fetchTriggers, getConfig, saveConfig } from '@/lib/zabbix-api';
 import type { AppConfig, ServerConfig } from '@/types/config';
 import type { TriggerResult } from '@/types/zabbix';
 
-interface ServerStatus {
+export interface ServerStatus {
   label: string;
   triggers: Map<string, number>; // priority -> count
   triggerDetails: Map<string, TriggerResult['triggers']>; // priority -> triggers
