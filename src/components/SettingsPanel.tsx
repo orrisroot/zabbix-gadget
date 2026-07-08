@@ -238,9 +238,8 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     <div className="flex flex-col h-full w-full text-slate-850 dark:text-slate-100 bg-slate-50 dark:bg-slate-950">
       {/* Header */}
       <header
-        className="app-header font-bold bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between cursor-grab select-none shadow-sm flex-shrink-0"
+        className="settings-header app-header font-bold bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between cursor-grab select-none shadow-sm flex-shrink-0"
         onMouseDown={handleMouseDown}
-        style={{ padding: '10px 14px' }}
       >
         <div className="flex items-center gap-2 text-base text-slate-700 dark:text-slate-200 animate-fade-in">
           <SettingsIcon size={18} className="text-indigo-450 dark:text-indigo-400" />
@@ -248,8 +247,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
         </div>
         <button
           onClick={onClose}
-          className="rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer"
-          style={{ padding: '6px' }}
+          className="settings-close-btn rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer"
           title="Close"
         >
           <X size={18} />
@@ -257,10 +255,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
       </header>
 
       {/* Main Content Area */}
-      <div
-        className="flex-1 flex flex-col gap-2 bg-slate-50 dark:bg-slate-950 overflow-hidden"
-        style={{ padding: '8px' }}
-      >
+      <div className="settings-main flex-1 flex flex-col gap-2 bg-slate-50 dark:bg-slate-950 overflow-hidden">
         {/* Section 1: Server List */}
         <div className="flex flex-col gap-1 flex-1 min-h-0">
           <div className="flex items-center justify-between px-0.5 flex-shrink-0">
@@ -274,10 +269,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
 
           <div className="flex-1 min-h-0 overflow-y-auto pr-1 flex flex-col gap-1 scrollbar-thin">
             {servers.length === 0 ? (
-              <div
-                className="text-center bg-slate-100/50 dark:bg-slate-900/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center h-full w-full"
-                style={{ padding: '10px' }}
-              >
+              <div className="settings-empty text-center bg-slate-100/50 dark:bg-slate-900/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center h-full w-full">
                 No connection targets registered
               </div>
             ) : (
@@ -288,12 +280,11 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                 return (
                   <div
                     key={i}
-                    className={`flex items-center justify-between rounded-lg border transition-all duration-200 ${
+                    className={`settings-server-item flex items-center justify-between rounded-lg border transition-all duration-200 ${
                       isEditingThis
                         ? 'bg-indigo-50/50 dark:bg-indigo-950/30 border-indigo-500/80 shadow-[0_0_8px_rgba(99,102,241,0.2)]'
                         : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 hover:bg-slate-100/50 dark:hover:bg-slate-900/80'
                     }`}
-                    style={{ padding: '6px 8px' }}
                   >
                     <div className="flex-1 min-w-0 pr-3">
                       <div className="flex items-center gap-2">
@@ -301,10 +292,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                           {s.label}
                         </span>
                         {isEditingThis && (
-                          <span
-                            className="text-sm bg-indigo-500/30 text-indigo-200 border border-indigo-500/40 rounded font-bold animate-pulse"
-                            style={{ padding: '1px 4px' }}
-                          >
+                          <span className="settings-editing-badge text-sm bg-indigo-500/30 text-indigo-200 border border-indigo-500/40 rounded font-bold animate-pulse">
                             Editing
                           </span>
                         )}
@@ -318,7 +306,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                       {/* Connection Test Action */}
                       <button
                         onClick={() => handleTest(s)}
-                        className={`rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer ${
+                        className={`settings-action-btn rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer ${
                           status === 'loading'
                             ? 'text-indigo-600 dark:text-indigo-400'
                             : status === 'ok'
@@ -327,7 +315,6 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                                 ? 'text-rose-600 dark:text-rose-400'
                                 : 'text-slate-500 dark:text-slate-400'
                         }`}
-                        style={{ padding: '5px' }}
                         title="Test Connection"
                         disabled={status === 'loading'}
                       >
@@ -345,12 +332,11 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                       {/* Load / Edit Action */}
                       <button
                         onClick={() => handleEdit(i)}
-                        className={`rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer ${
+                        className={`settings-action-btn rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer ${
                           isEditingThis
                             ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10'
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                         }`}
-                        style={{ padding: '5px' }}
                         title="Load into Form"
                       >
                         <Edit2 size={15} />
@@ -359,8 +345,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                       {/* Delete Action */}
                       <button
                         onClick={() => handleRemove(i)}
-                        className="rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-650 dark:hover:text-rose-455 transition-colors cursor-pointer"
-                        style={{ padding: '5px' }}
+                        className="settings-action-btn rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-650 dark:hover:text-rose-455 transition-colors cursor-pointer"
                         title="Delete"
                       >
                         <Trash2 size={15} />
@@ -374,10 +359,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
         </div>
 
         {/* Section 2: Form */}
-        <div
-          className="bg-slate-100/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg flex flex-col gap-2 shadow-inner"
-          style={{ padding: '8px' }}
-        >
+        <div className="settings-form-container bg-slate-100/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg flex flex-col gap-2 shadow-inner">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
             <span className="text-sm text-indigo-600 dark:text-indigo-400 font-bold tracking-wide">
               {editIndex !== null ? 'Edit Connection' : 'Add Connection'}
@@ -398,16 +380,14 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
               placeholder="Label"
               value={formLabel}
               onChange={(e) => setFormLabel(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-              style={{ padding: '4px 8px' }}
+              className="settings-input w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
             />
             {/* Host URL */}
             <input
               placeholder="Host (https://zabbix.example.com)"
               value={formHost}
               onChange={(e) => setFormHost(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-              style={{ padding: '4px 8px' }}
+              className="settings-input w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
             />
             {/* User & Password */}
             <div className="flex gap-2">
@@ -415,16 +395,14 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                 placeholder="User"
                 value={formUser}
                 onChange={(e) => setFormUser(e.target.value)}
-                className="flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                style={{ padding: '4px 8px' }}
+                className="settings-input flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
               />
               <input
                 placeholder="Password"
                 type="password"
                 value={formPass}
                 onChange={(e) => setFormPass(e.target.value)}
-                className="flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                style={{ padding: '4px 8px' }}
+                className="settings-input flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
               />
             </div>
             {/* Basic Auth Checkbox */}
@@ -438,7 +416,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
               />
               <label
                 htmlFor="use-basic-auth"
-                className="text-xs text-slate-605 dark:text-slate-400 font-semibold select-none cursor-pointer hover:text-slate-850 dark:hover:text-slate-200 transition-colors"
+                className="text-xs text-slate-600 dark:text-slate-400 font-semibold select-none cursor-pointer hover:text-slate-850 dark:hover:text-slate-200 transition-colors"
               >
                 Use Basic Authentication
               </label>
@@ -450,21 +428,19 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                   placeholder="Basic Auth User"
                   value={formBasicAuthUser}
                   onChange={(e) => setFormBasicAuthUser(e.target.value)}
-                  className="flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                  style={{ padding: '4px 8px' }}
+                  className="settings-input flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
                 />
                 <input
                   placeholder="Basic Auth Password"
                   type="password"
                   value={formBasicAuthPass}
                   onChange={(e) => setFormBasicAuthPass(e.target.value)}
-                  className="flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                  style={{ padding: '4px 8px' }}
+                  className="settings-input flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
                 />
               </div>
             )}
             {formErrorMessage && (
-              <div className="text-[11px] text-rose-600 dark:text-rose-400 font-bold px-1 py-0.5 break-all">
+              <div className="text-xs text-rose-600 dark:text-rose-400 font-bold px-1 py-0.5 break-all">
                 {formErrorMessage}
               </div>
             )}
@@ -475,7 +451,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
             <button
               onClick={handleTestFormServer}
               disabled={!formHost.trim()}
-              className={`flex items-center gap-1.5 text-sm rounded font-bold transition-all duration-200 ${
+              className={`settings-btn-padding flex items-center gap-1.5 text-sm rounded font-bold transition-all duration-200 ${
                 !formHost.trim()
                   ? 'opacity-40 cursor-not-allowed bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
                   : formTestStatus === 'loading'
@@ -486,7 +462,6 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                         ? 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-250 dark:border-rose-500/30'
                         : 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 cursor-pointer hover:text-slate-900 dark:hover:text-white'
               }`}
-              style={{ padding: '4px 10px' }}
             >
               {formTestStatus === 'loading' ? (
                 <>
@@ -512,8 +487,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
               <button
                 onClick={handleUpdate}
                 disabled={!formLabel.trim() || !formHost.trim()}
-                className="flex items-center gap-1.5 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded cursor-pointer disabled:opacity-50 font-bold transition-all shadow-md shadow-indigo-600/10 active:scale-[0.98]"
-                style={{ padding: '4px 10px' }}
+                className="settings-btn-padding flex items-center gap-1.5 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded cursor-pointer disabled:opacity-50 font-bold transition-all shadow-md shadow-indigo-600/10 active:scale-[0.98]"
               >
                 <Check size={14} /> Update
               </button>
@@ -521,8 +495,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
               <button
                 onClick={handleAdd}
                 disabled={!formLabel.trim() || !formHost.trim()}
-                className="flex items-center gap-1.5 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded cursor-pointer disabled:opacity-50 font-bold transition-all shadow-md shadow-indigo-600/10 active:scale-[0.98]"
-                style={{ padding: '4px 10px' }}
+                className="settings-btn-padding flex items-center gap-1.5 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded cursor-pointer disabled:opacity-50 font-bold transition-all shadow-md shadow-indigo-600/10 active:scale-[0.98]"
               >
                 <Plus size={14} /> Add Target
               </button>
@@ -531,10 +504,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
         </div>
 
         {/* Section 3: General Settings */}
-        <div
-          className="flex items-center justify-between bg-slate-100/30 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-900 rounded-lg flex-shrink-0 relative"
-          style={{ padding: '6px 8px' }}
-        >
+        <div className="settings-row flex items-center justify-between bg-slate-100/30 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-900 rounded-lg flex-shrink-0 relative">
           <div className="flex items-center gap-2">
             <Sliders size={14} className="text-slate-400" />
             <span className="text-sm text-slate-800 dark:text-slate-200 font-bold tracking-wide">Refresh Interval</span>
@@ -542,8 +512,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
           <div className="relative">
             <button
               onClick={() => setIsIntervalOpen(!isIntervalOpen)}
-              className="bg-white dark:bg-slate-900 border border-slate-350 dark:border-slate-700 rounded-md text-sm text-slate-800 dark:text-slate-100 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer flex items-center gap-2 min-w-[120px] justify-between"
-              style={{ padding: '4px 8px' }}
+              className="settings-select-btn bg-white dark:bg-slate-900 border border-slate-350 dark:border-slate-700 rounded-md text-sm text-slate-800 dark:text-slate-100 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer flex items-center gap-2 min-w-[120px] justify-between"
             >
               <span>{activeIntervalLabel}</span>
               <ChevronDown
@@ -552,10 +521,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
               />
             </button>
             {isIntervalOpen && (
-              <div
-                className="absolute right-0 bottom-full mb-1.5 z-50 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md shadow-xl min-w-[125px] overflow-hidden"
-                style={{ padding: '2px 0' }}
-              >
+              <div className="settings-dropdown absolute right-0 bottom-full mb-1.5 z-50 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md shadow-xl min-w-[125px] overflow-hidden">
                 {intervalOptions.map((opt) => (
                   <button
                     key={opt.value}
@@ -563,12 +529,11 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                       setRefreshInterval(opt.value);
                       setIsIntervalOpen(false);
                     }}
-                    className={`w-full text-left text-sm transition-all cursor-pointer block ${
+                    className={`settings-btn-padding w-full text-left text-sm transition-all cursor-pointer block ${
                       refreshInterval === opt.value
                         ? 'bg-indigo-600 text-white font-bold'
                         : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                     }`}
-                    style={{ padding: '4px 10px' }}
                   >
                     {opt.label}
                   </button>
@@ -581,8 +546,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
         {/* Save & Apply Button */}
         <button
           onClick={handleSave}
-          className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded text-sm font-bold cursor-pointer transition-all duration-200 shadow-lg shadow-indigo-500/15 active:scale-[0.98] border border-indigo-500/30 flex-shrink-0"
-          style={{ padding: '6px 12px' }}
+          className="settings-save-btn w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded text-sm font-bold cursor-pointer transition-all duration-200 shadow-lg shadow-indigo-500/15 active:scale-[0.98] border border-indigo-500/30 flex-shrink-0"
         >
           Save & Apply Settings
         </button>

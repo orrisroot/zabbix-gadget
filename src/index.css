@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@theme {
+  --text-xxs: 0.625rem; /* precisely 10px (based on 16px root) */
+  --text-xxs--line-height: 0.875rem;
+  --text-xxxs: 0.5rem; /* precisely 8px (based on 16px root) */
+  --text-xxxs--line-height: 0.75rem;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -35,7 +42,7 @@ body,
   height: 100%;
   width: 100%;
   font-family: "Inter", "Noto Sans JP", -apple-system, BlinkMacSystemFont, sans-serif !important;
-  font-size: 8.5pt;
+  font-size: 16px;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -87,4 +94,80 @@ body,
 }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.75);
+}
+
+/* Tooltip styles */
+.tooltip-container {
+  margin: 12px !important;
+  height: calc(100% - 24px) !important;
+  width: calc(100% - 24px) !important;
+  padding: 12px !important;
+  box-sizing: border-box !important;
+}
+
+.tooltip-header {
+  padding-bottom: 10px !important;
+  margin-bottom: 16px !important;
+}
+
+.tooltip-body {
+  gap: 12px !important;
+}
+
+.tooltip-item {
+  padding: 8px !important;
+}
+
+.tooltip-item-meta {
+  margin-top: 10px !important;
+  column-gap: 16px !important;
+  row-gap: 4px !important;
+}
+
+/* Settings Panel Specific Styles */
+.settings-header {
+  padding: 10px 14px !important;
+}
+
+.settings-close-btn {
+  padding: 6px !important;
+}
+
+.settings-main,
+.settings-form-container {
+  padding: 8px !important;
+}
+
+.settings-empty {
+  padding: 10px !important;
+}
+
+.settings-server-item,
+.settings-row {
+  padding: 6px 8px !important;
+}
+
+.settings-editing-badge {
+  padding: 1px 4px !important;
+}
+
+.settings-action-btn {
+  padding: 5px !important;
+}
+
+.settings-input,
+.settings-select-btn {
+  padding: 4px 8px !important;
+}
+
+.settings-btn-padding {
+  padding: 4px 10px !important;
+}
+
+.settings-dropdown {
+  padding: 2px 0 !important;
+}
+
+.settings-save-btn {
+  padding: 6px 12px !important;
 }

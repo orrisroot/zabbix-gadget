@@ -42,7 +42,7 @@ function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps)
     >
       <div className="flex items-center gap-2">
         <Activity size={13} className="text-orange-500" />
-        <span className="text-[11px] font-bold text-gray-600 dark:text-gray-300 tracking-wider uppercase">
+        <span className="text-xs font-bold text-gray-600 dark:text-gray-300 tracking-wider uppercase">
           System Status
         </span>
       </div>

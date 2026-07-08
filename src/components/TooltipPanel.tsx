@@ -89,47 +89,33 @@ function TooltipPanel() {
 
   return (
     <div
-      className="flex flex-col bg-white/98 dark:bg-slate-950/98 text-slate-900 dark:text-white select-none border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden shadow-md backdrop-blur-md"
-      style={{
-        margin: '12px',
-        height: 'calc(100% - 24px)',
-        width: 'calc(100% - 24px)',
-        padding: '12px',
-        boxSizing: 'border-box',
-      }}
+      className="tooltip-container flex flex-col bg-white/98 dark:bg-slate-950/98 text-slate-900 dark:text-white select-none border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden shadow-md backdrop-blur-md"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div
-        className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 flex-shrink-0"
-        style={{ paddingBottom: '10px', marginBottom: '16px' }}
-      >
+      <div className="tooltip-header flex items-center justify-between border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <span className={`w-3.5 h-3.5 rounded-full ${statusBgColor} animate-pulse`} />
-          <span className="text-lg font-extrabold tracking-wide">{data.priorityLabel}</span>
+          <span className="text-sm font-extrabold tracking-wide">{data.priorityLabel}</span>
         </div>
-        <span className="text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+        <span className="text-xxs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
           {data.count} Triggers
         </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin pr-1 flex flex-col" style={{ gap: '12px' }}>
+      <div className="tooltip-body flex-1 overflow-y-auto scrollbar-thin pr-1 flex flex-col">
         {data.details.map((t, i) => {
           const changeTime = t.lastchange ? new Date(parseInt(t.lastchange, 10) * 1000).toLocaleString() : 'Unknown';
 
           return (
             <div
               key={t.triggerid || i}
-              className="text-base bg-slate-50 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-md transition-all duration-150 shadow-sm"
-              style={{ padding: '8px' }}
+              className="tooltip-item text-xxs bg-slate-50 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-md transition-all duration-150 shadow-sm"
             >
               <div className="font-semibold text-slate-800 dark:text-slate-100 leading-snug break-words">
                 {t.description}
               </div>
-              <div
-                className="flex flex-wrap text-sm text-slate-500 dark:text-slate-400 font-medium"
-                style={{ marginTop: '10px', columnGap: '16px', rowGap: '4px' }}
-              >
+              <div className="tooltip-item-meta flex flex-wrap text-xxs text-slate-500 dark:text-slate-400 font-medium">
                 {t.hostname && (
                   <div>
                     <span className="text-slate-400 dark:text-slate-500">Host:</span> {t.hostname}

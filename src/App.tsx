@@ -51,17 +51,6 @@ function App() {
   }, [config?.settings.theme]);
 
   useEffect(() => {
-    if (isSettingsWindow) {
-      document.documentElement.style.fontSize = '14px';
-      document.body.style.fontSize = '14px';
-      const root = document.getElementById('root');
-      if (root) {
-        root.style.fontSize = '14px';
-      }
-    }
-  }, [isSettingsWindow]);
-
-  useEffect(() => {
     if (isSettingsWindow || isTooltipWindow) return;
 
     console.log('App: useEffect for resize triggered');
@@ -177,28 +166,28 @@ function App() {
         className={`flex-1 app-main overflow-y-auto scrollbar-thin ${!hasServers ? 'flex flex-col justify-center min-h-0' : ''}`}
       >
         {hasServers ? (
-          <table className="w-full table-fixed border-separate border-spacing-x-1.5 border-spacing-y-1.5">
+          <table className="w-full table-fixed border-separate border-spacing-x-1.5 border-spacing-y-1.5 text-xxs">
             <thead>
               <tr className="text-slate-600 dark:text-gray-200">
-                <th className="text-left pb-2 px-2 w-[110px] font-semibold text-[8px] uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-left pb-2 px-2 w-[110px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   Server
                 </th>
-                <th className="text-center pb-2 w-[80px] font-semibold text-[8px] uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-center pb-2 w-[80px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   Disaster
                 </th>
-                <th className="text-center pb-2 w-[80px] font-semibold text-[8px] uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-center pb-2 w-[80px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   High
                 </th>
-                <th className="text-center pb-2 w-[80px] font-semibold text-[8px] uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-center pb-2 w-[80px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   Average
                 </th>
-                <th className="text-center pb-2 w-[80px] font-semibold text-[8px] uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-center pb-2 w-[80px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   Warning
                 </th>
-                <th className="text-center pb-2 w-[80px] font-semibold text-[8px] uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-center pb-2 w-[80px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   Information
                 </th>
-                <th className="text-center pb-2 w-[80px] font-semibold text-[8px] uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-center pb-2 w-[80px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   Not classified
                 </th>
               </tr>
@@ -214,14 +203,14 @@ function App() {
           <div className="flex flex-col items-center justify-center p-5 text-center gap-2.5 bg-gray-100/40 dark:bg-gray-900/30 border border-dashed border-slate-200 dark:border-gray-800/60 rounded-md w-full mx-auto select-none my-1">
             <AlertCircle className="text-orange-500 w-8 h-8 animate-pulse" />
             <div>
-              <h3 className="font-bold text-slate-800 dark:text-gray-200 text-[11px] uppercase tracking-wider">
+              <h3 className="font-bold text-slate-800 dark:text-gray-200 text-xs uppercase tracking-wider">
                 Zabbix Targets Not Configured
               </h3>
-              <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1.5 leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-1.5 leading-relaxed">
                 No connection targets are registered.
                 <br />
                 Please click the Settings gear icon{' '}
-                <Settings size={11} className="inline text-indigo-450 dark:text-indigo-400 align-middle -mt-0.5" /> in
+                <Settings size={13} className="inline text-indigo-450 dark:text-indigo-400 align-middle -mt-0.5" /> in
                 the header to register Zabbix servers.
               </p>
             </div>
@@ -229,7 +218,7 @@ function App() {
         )}
       </main>
       {hasServers && (
-        <footer className="app-footer flex justify-between text-slate-500 dark:text-gray-500 text-[10px]">
+        <footer className="app-footer flex justify-between text-slate-500 dark:text-gray-500 text-xs">
           <span>Refresh Interval: {intervalLabel}</span>
           <span>Updated: {lastUpdate.toLocaleString()}</span>
         </footer>
