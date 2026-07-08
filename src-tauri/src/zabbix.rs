@@ -166,3 +166,8 @@ impl ZabbixClient {
         Ok(response.result.ok_or("Empty result from Zabbix fetch")?)
     }
 }
+
+#[derive(Default)]
+pub struct ZabbixSessionStore {
+    pub tokens: std::sync::Mutex<std::collections::HashMap<String, String>>,
+}

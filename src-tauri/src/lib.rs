@@ -67,6 +67,7 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
 pub fn run() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("debug")).init();
     tauri::Builder::default()
+        .manage(zabbix::ZabbixSessionStore::default())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())

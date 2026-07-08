@@ -1,5 +1,5 @@
 use crate::config::{self, AppConfig, ServerConfig};
-use crate::zabbix::{ZabbixClient, ZabbixTrigger};
+use crate::zabbix::{ZabbixClient, ZabbixSessionStore, ZabbixTrigger};
 use serde::Serialize;
 use tauri::{Emitter, Manager};
 
@@ -33,7 +33,10 @@ pub async fn get_config_dir() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn login(server: ServerConfig) -> Result<bool, String> {
+pub async fn login(
+    server: ServerConfig,
+    session_store: tauri::State<'_, ZabbixSessionStore>,
+) -> Result<bool, String> {
     let mut client = ZabbixClient::new(
         &server.host,
         &server.user,
@@ -41,15 +44,23 @@ pub async fn login(server: ServerConfig) -> Result<bool, String> {
         server.basic_auth_user,
         server.basic_auth_pass,
     );
-    client
-        .login()
-        .await
-        .map(|_| true)
-        .map_err(|e| e.to_string())
+    match client.login().await {
+        Ok(_) => {
+            if let Some(ref token) = client.auth_token {
+                let mut tokens = session_store.tokens.lock().unwrap();
+                tokens.insert(server.label.clone(), token.clone());
+            }
+            Ok(true)
+        }
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 #[tauri::command]
-pub async fn fetch_triggers(server: ServerConfig) -> TriggerResult {
+pub async fn fetch_triggers(
+    server: ServerConfig,
+    session_store: tauri::State<'_, ZabbixSessionStore>,
+) -> Result<TriggerResult, String> {
     let mut client = ZabbixClient::new(
         &server.host,
         &server.user,
@@ -58,20 +69,37 @@ pub async fn fetch_triggers(server: ServerConfig) -> TriggerResult {
         server.basic_auth_pass.clone(),
     );
 
-    // Try to login first
-    if let Err(e) = client.login().await {
-        return TriggerResult {
-            label: server.label,
-            success: false,
-            triggers: vec![],
-            error: Some(format!("Login failed: {}", e)),
-            last_update: 0,
-        };
+    // 1. Try to get token from cache
+    let cached_token = {
+        let tokens = session_store.tokens.lock().unwrap();
+        tokens.get(&server.label).cloned()
+    };
+
+    let mut needs_login = true;
+    if let Some(token) = cached_token {
+        client.auth_token = Some(token);
+        needs_login = false;
     }
 
-    // Fetch triggers
-    match client.get_triggers().await {
-        Ok(triggers) => TriggerResult {
+    if needs_login {
+        if let Err(e) = client.login().await {
+            return Ok(TriggerResult {
+                label: server.label,
+                success: false,
+                triggers: vec![],
+                error: Some(format!("Login failed: {}", e)),
+                last_update: 0,
+            });
+        }
+        if let Some(ref token) = client.auth_token {
+            let mut tokens = session_store.tokens.lock().unwrap();
+            tokens.insert(server.label.clone(), token.clone());
+        }
+    }
+
+    // 2. Try fetching triggers
+    match client.get_triggers().await.map_err(|e| e.to_string()) {
+        Ok(triggers) => Ok(TriggerResult {
             label: server.label,
             success: true,
             triggers,
@@ -80,14 +108,64 @@ pub async fn fetch_triggers(server: ServerConfig) -> TriggerResult {
                 .duration_since(std::time::UNIX_EPOCH)
                 .map(|d| d.as_secs())
                 .unwrap_or_else(|_| 0),
-        },
-        Err(e) => TriggerResult {
-            label: server.label,
-            success: false,
-            triggers: vec![],
-            error: Some(format!("Failed to fetch triggers: {}", e)),
-            last_update: 0,
-        },
+        }),
+        Err(e) => {
+            log::warn!(
+                "Failed to fetch triggers with cached token for {}: {}. Retrying login...",
+                server.label,
+                e
+            );
+
+            // Invalidate cache
+            {
+                let mut tokens = session_store.tokens.lock().unwrap();
+                tokens.remove(&server.label);
+            }
+
+            // Retry login
+            if let Err(login_err) = client.login().await {
+                return Ok(TriggerResult {
+                    label: server.label,
+                    success: false,
+                    triggers: vec![],
+                    error: Some(format!(
+                        "Login failed after token invalidation: {}",
+                        login_err
+                    )),
+                    last_update: 0,
+                });
+            }
+
+            // Cache new token
+            if let Some(ref token) = client.auth_token {
+                let mut tokens = session_store.tokens.lock().unwrap();
+                tokens.insert(server.label.clone(), token.clone());
+            }
+
+            // Retry fetching triggers
+            match client.get_triggers().await {
+                Ok(triggers) => Ok(TriggerResult {
+                    label: server.label,
+                    success: true,
+                    triggers,
+                    error: None,
+                    last_update: std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .map(|d| d.as_secs())
+                        .unwrap_or_else(|_| 0),
+                }),
+                Err(retry_err) => Ok(TriggerResult {
+                    label: server.label,
+                    success: false,
+                    triggers: vec![],
+                    error: Some(format!(
+                        "Failed to fetch triggers after login retry: {}",
+                        retry_err
+                    )),
+                    last_update: 0,
+                }),
+            }
+        }
     }
 }
 
