@@ -36,6 +36,9 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [formHost, setFormHost] = useState('');
   const [formUser, setFormUser] = useState('');
   const [formPass, setFormPass] = useState('');
+  const [formBasicAuthUser, setFormBasicAuthUser] = useState('');
+  const [formBasicAuthPass, setFormBasicAuthPass] = useState('');
+  const [useBasicAuth, setUseBasicAuth] = useState(false);
 
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
@@ -50,7 +53,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
   useEffect(() => {
     setFormTestStatus('idle');
     setFormErrorMessage(null);
-  }, [formLabel, formHost, formUser, formPass]);
+  }, [formLabel, formHost, formUser, formPass, formBasicAuthUser, formBasicAuthPass, useBasicAuth]);
 
   // Sync local states with config when it is loaded or updated in the store
   useEffect(() => {
@@ -79,6 +82,9 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     setFormHost('');
     setFormUser('');
     setFormPass('');
+    setFormBasicAuthUser('');
+    setFormBasicAuthPass('');
+    setUseBasicAuth(false);
     setEditIndex(null);
     setFormTestStatus('idle');
     setFormErrorMessage(null);
@@ -90,6 +96,9 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     setFormHost(s.host);
     setFormUser(s.user);
     setFormPass(s.pass);
+    setFormBasicAuthUser(s.basic_auth_user ?? '');
+    setFormBasicAuthPass(s.basic_auth_pass ?? '');
+    setUseBasicAuth(!!s.basic_auth_user);
     setEditIndex(idx);
   };
 
@@ -100,6 +109,12 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
       host: formHost.trim(),
       user: formUser.trim(),
       pass: formPass.trim(),
+      ...(useBasicAuth
+        ? {
+            basic_auth_user: formBasicAuthUser.trim(),
+            basic_auth_pass: formBasicAuthPass.trim(),
+          }
+        : {}),
     };
     setServers([...servers, newServer]);
     resetForm();
@@ -113,6 +128,12 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
       host: formHost.trim(),
       user: formUser.trim(),
       pass: formPass.trim(),
+      ...(useBasicAuth
+        ? {
+            basic_auth_user: formBasicAuthUser.trim(),
+            basic_auth_pass: formBasicAuthPass.trim(),
+          }
+        : {}),
     };
     setServers(updatedServers);
     resetForm();
@@ -150,6 +171,12 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
         host: formHost.trim(),
         user: formUser.trim(),
         pass: formPass.trim(),
+        ...(useBasicAuth
+          ? {
+              basic_auth_user: formBasicAuthUser.trim(),
+              basic_auth_pass: formBasicAuthPass.trim(),
+            }
+          : {}),
       };
       const ok = await loginServer(serverToTest);
       if (ok) {
@@ -400,6 +427,42 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                 style={{ padding: '4px 8px' }}
               />
             </div>
+            {/* Basic Auth Checkbox */}
+            <div className="flex items-center gap-2 px-1 py-0.5 mt-0.5">
+              <input
+                type="checkbox"
+                id="use-basic-auth"
+                checked={useBasicAuth}
+                onChange={(e) => setUseBasicAuth(e.target.checked)}
+                className="rounded border-slate-350 dark:border-slate-750 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-slate-950 h-3.5 w-3.5 cursor-pointer"
+              />
+              <label
+                htmlFor="use-basic-auth"
+                className="text-xs text-slate-605 dark:text-slate-400 font-semibold select-none cursor-pointer hover:text-slate-850 dark:hover:text-slate-200 transition-colors"
+              >
+                Use Basic Authentication
+              </label>
+            </div>
+            {/* Basic Auth Credentials Fields */}
+            {useBasicAuth && (
+              <div className="flex gap-2 transition-all duration-300 ease-in-out">
+                <input
+                  placeholder="Basic Auth User"
+                  value={formBasicAuthUser}
+                  onChange={(e) => setFormBasicAuthUser(e.target.value)}
+                  className="flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                  style={{ padding: '4px 8px' }}
+                />
+                <input
+                  placeholder="Basic Auth Password"
+                  type="password"
+                  value={formBasicAuthPass}
+                  onChange={(e) => setFormBasicAuthPass(e.target.value)}
+                  className="flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                  style={{ padding: '4px 8px' }}
+                />
+              </div>
+            )}
             {formErrorMessage && (
               <div className="text-[11px] text-rose-600 dark:text-rose-400 font-bold px-1 py-0.5 break-all">
                 {formErrorMessage}

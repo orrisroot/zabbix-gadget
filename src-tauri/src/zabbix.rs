@@ -49,12 +49,20 @@ pub struct ZabbixClient {
     pub host: String,
     pub user: String,
     pub pass: String,
+    pub basic_auth_user: Option<String>,
+    pub basic_auth_pass: Option<String>,
     pub auth_token: Option<String>,
     client: reqwest::Client,
 }
 
 impl ZabbixClient {
-    pub fn new(host: &str, user: &str, pass: &str) -> Self {
+    pub fn new(
+        host: &str,
+        user: &str,
+        pass: &str,
+        basic_auth_user: Option<String>,
+        basic_auth_pass: Option<String>,
+    ) -> Self {
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(10))
             .build()
@@ -63,6 +71,8 @@ impl ZabbixClient {
             host: host.to_string(),
             user: user.to_string(),
             pass: pass.to_string(),
+            basic_auth_user,
+            basic_auth_pass,
             auth_token: None,
             client,
         }
@@ -76,9 +86,12 @@ impl ZabbixClient {
     pub async fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let url = self.api_url();
 
-        let response: ZabbixApiResponse<String> = self
-            .client
-            .post(&url)
+        let mut req = self.client.post(&url);
+        if let Some(ref b_user) = self.basic_auth_user {
+            req = req.basic_auth(b_user, self.basic_auth_pass.as_deref());
+        }
+
+        let response: ZabbixApiResponse<String> = req
             .json(&json!({
                 "jsonrpc": "2.0",
                 "method": "user.login",
@@ -110,9 +123,12 @@ impl ZabbixClient {
 
         let token = self.auth_token.as_ref().ok_or("Not logged in")?;
 
-        let response: ZabbixApiResponse<Vec<ZabbixTrigger>> = self
-            .client
-            .post(&url)
+        let mut req = self.client.post(&url);
+        if let Some(ref b_user) = self.basic_auth_user {
+            req = req.basic_auth(b_user, self.basic_auth_pass.as_deref());
+        }
+
+        let response: ZabbixApiResponse<Vec<ZabbixTrigger>> = req
             .json(&json!({
                 "jsonrpc": "2.0",
                 "method": "trigger.get",

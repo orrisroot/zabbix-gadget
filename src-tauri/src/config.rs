@@ -11,6 +11,10 @@ pub struct ServerConfig {
     pub host: String,
     pub user: String,
     pub pass: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub basic_auth_user: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub basic_auth_pass: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -135,5 +139,56 @@ mod tests {
         "#;
         let config_light: AppConfig = toml::from_str(toml_with_light).unwrap();
         assert_eq!(config_light.settings.theme, "light");
+    }
+
+    #[test]
+    fn test_config_basic_auth_serialization() {
+        let toml_content = r#"
+            [[servers]]
+            label = "Test"
+            host = "http://localhost"
+            user = "Admin"
+            pass = "zabbix"
+            basic_auth_user = "basic_user"
+            basic_auth_pass = "basic_pass"
+
+            [settings]
+            refresh_interval_seconds = 120
+        "#;
+
+        let config: AppConfig = toml::from_str(toml_content).unwrap();
+        assert_eq!(
+            config.servers[0].basic_auth_user.as_deref(),
+            Some("basic_user")
+        );
+        assert_eq!(
+            config.servers[0].basic_auth_pass.as_deref(),
+            Some("basic_pass")
+        );
+
+        // Serialization should include basic auth
+        let serialized = toml::to_string_pretty(&config).unwrap();
+        assert!(
+            serialized.contains("basic_auth_user = \"basic_user\"")
+                || serialized.contains("basic_auth_user = 'basic_user'")
+        );
+
+        // Serialization should NOT include basic auth if None
+        let config_no_auth = AppConfig {
+            servers: vec![ServerConfig {
+                label: "NoAuth".to_string(),
+                host: "http://localhost".to_string(),
+                user: "Admin".to_string(),
+                pass: "zabbix".to_string(),
+                basic_auth_user: None,
+                basic_auth_pass: None,
+            }],
+            settings: crate::config::AppSettings {
+                refresh_interval_seconds: 120,
+                theme: "dark".to_string(),
+            },
+        };
+        let serialized_no_auth = toml::to_string_pretty(&config_no_auth).unwrap();
+        assert!(!serialized_no_auth.contains("basic_auth_user"));
     }
 }

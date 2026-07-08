@@ -34,7 +34,13 @@ pub async fn get_config_dir() -> Result<String, String> {
 
 #[tauri::command]
 pub async fn login(server: ServerConfig) -> Result<bool, String> {
-    let mut client = ZabbixClient::new(&server.host, &server.user, &server.pass);
+    let mut client = ZabbixClient::new(
+        &server.host,
+        &server.user,
+        &server.pass,
+        server.basic_auth_user,
+        server.basic_auth_pass,
+    );
     client
         .login()
         .await
@@ -44,7 +50,13 @@ pub async fn login(server: ServerConfig) -> Result<bool, String> {
 
 #[tauri::command]
 pub async fn fetch_triggers(server: ServerConfig) -> TriggerResult {
-    let mut client = ZabbixClient::new(&server.host, &server.user, &server.pass);
+    let mut client = ZabbixClient::new(
+        &server.host,
+        &server.user,
+        &server.pass,
+        server.basic_auth_user.clone(),
+        server.basic_auth_pass.clone(),
+    );
 
     // Try to login first
     if let Err(e) = client.login().await {

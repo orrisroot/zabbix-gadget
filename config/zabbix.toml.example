@@ -6,6 +6,8 @@ label = "Production"
 host = "https://zabbix.example.com/"
 user = "Admin"
 pass = "your_password"
+# basic_auth_user = "proxy_user"  # Optional HTTP Basic Authentication username
+# basic_auth_pass = "proxy_pass"  # Optional HTTP Basic Authentication password
 
 # [[servers]]
 # label = "Development"
