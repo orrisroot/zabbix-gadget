@@ -63,6 +63,26 @@ pub fn get_config_path() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("zabbix.toml"))
 }
 
+#[cfg(unix)]
+fn secure_permissions(path: &std::path::Path, mode: u32) -> Result<(), Box<dyn std::error::Error>> {
+    use std::os::unix::fs::PermissionsExt;
+    let mut perms = fs::metadata(path)?.permissions();
+    // Only apply permissions if they differ to avoid redundant syscalls
+    if perms.mode() & 0o777 != mode {
+        perms.set_mode(mode);
+        fs::set_permissions(path, perms)?;
+    }
+    Ok(())
+}
+
+#[cfg(not(unix))]
+fn secure_permissions(
+    _path: &std::path::Path,
+    _mode: u32,
+) -> Result<(), Box<dyn std::error::Error>> {
+    Ok(())
+}
+
 pub fn init_config(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     let config_dir = app.path().config_dir()?.join("zabbix-gadget");
     let config_path = config_dir.join("zabbix.toml");
@@ -74,6 +94,9 @@ pub fn init_config(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     if !config_dir.exists() {
         fs::create_dir_all(&config_dir)?;
     }
+    // Restrict access to the configuration directory to prevent other users on the system
+    // from reading its contents or listing configuration files.
+    secure_permissions(&config_dir, 0o700)?;
 
     // Create default config file if it doesn't exist
     if !config_path.exists() {
@@ -81,6 +104,8 @@ pub fn init_config(app: &App) -> Result<(), Box<dyn std::error::Error>> {
         let toml_string = toml::to_string_pretty(&default_config)?;
         fs::write(&config_path, toml_string)?;
     }
+    // Restrict access to the configuration file since it contains credentials (passwords).
+    secure_permissions(&config_path, 0o600)?;
 
     Ok(())
 }
@@ -96,6 +121,9 @@ pub fn save_config(config: &AppConfig) -> Result<(), Box<dyn std::error::Error>>
     let config_path = get_config_path();
     let toml_string = toml::to_string_pretty(config)?;
     fs::write(&config_path, toml_string)?;
+    // Ensure the config file permissions are restricted to owner-only read/write
+    // to protect sensitive credentials (passwords).
+    secure_permissions(&config_path, 0o600)?;
     Ok(())
 }
 
@@ -190,5 +218,33 @@ mod tests {
         };
         let serialized_no_auth = toml::to_string_pretty(&config_no_auth).unwrap();
         assert!(!serialized_no_auth.contains("basic_auth_user"));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn test_secure_permissions() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let unique_id = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let temp_dir = std::env::temp_dir().join(format!("zabbix-gadget-test-{}", unique_id));
+        fs::create_dir_all(&temp_dir).unwrap();
+
+        // 1. Verify directory permission is secured to 0o700
+        secure_permissions(&temp_dir, 0o700).unwrap();
+        let dir_perms = fs::metadata(&temp_dir).unwrap().permissions();
+        assert_eq!(dir_perms.mode() & 0o777, 0o700);
+
+        // 2. Verify file permission is secured to 0o600
+        let test_file = temp_dir.join("zabbix.toml");
+        fs::write(&test_file, "test").unwrap();
+        secure_permissions(&test_file, 0o600).unwrap();
+        let file_perms = fs::metadata(&test_file).unwrap().permissions();
+        assert_eq!(file_perms.mode() & 0o777, 0o600);
+
+        // Clean up
+        fs::remove_dir_all(&temp_dir).unwrap();
     }
 }
