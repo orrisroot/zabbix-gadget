@@ -1,0 +1,83 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Sophisticated background gradient: from vibrant neon-red to deep dark cherry -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff2e5f" />
+      <stop offset="40%" stop-color="#d40000" />
+      <stop offset="100%" stop-color="#4a0000" />
+    </linearGradient>
+
+    <!-- Metallic gradient for the Z logo -->
+    <linearGradient id="zGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="30%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#cbd5e1" />
+    </linearGradient>
+
+    <!-- Subtle inner border gradient to create a sleek bezel effect -->
+    <linearGradient id="bezelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.25" />
+    </linearGradient>
+
+    <!-- Smooth drop shadow for the main icon body -->
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
+
+    <!-- Shadow cast by the Z logo onto the background -->
+    <filter id="zShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.45" />
+    </filter>
+
+    <!-- Clip path to keep effects within the rounded square -->
+    <clipPath id="bgClip">
+      <rect x="16" y="16" width="480" height="480" rx="108" />
+    </clipPath>
+
+    <!-- Cyber/Grid diagonal line pattern to give a tech-oriented dashboard feel -->
+    <pattern id="gridPattern" width="16" height="16" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="16" stroke="#ffffff" stroke-width="1.2" stroke-opacity="0.07" />
+    </pattern>
+  </defs>
+
+  <!-- 1. Shadowed Main Background -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bgGrad)" filter="url(#dropShadow)" />
+
+  <!-- 2. Cyber Stripe Pattern overlay -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#gridPattern)" clip-path="url(#bgClip)" />
+
+  <!-- 3. Gloss/Glass overlay for upper half -->
+  <path d="M 16,16 L 496,16 L 496,220 L 16,320 Z" fill="#ffffff" opacity="0.04" clip-path="url(#bgClip)" />
+
+  <!-- 4. Inner Bezel stroke -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="none" stroke="url(#bezelGrad)" stroke-width="2" clip-path="url(#bgClip)" />
+
+  <!-- 5. Z Logo Layers: Scaled to ~58% of the square, thickened, and layered for sharp white edge-highlights -->
+  
+  <!-- 5a. Base thickened Z with 3D Drop Shadow -->
+  <path d="M 1.14 0 H 59.1 v 7.53 l -46.65 57.15 h 47.79 v 8.31 H 0 v -7.53 l 46.65 -57.15 H 1.14 Z" 
+        fill="url(#zGrad)" 
+        filter="url(#zShadow)"
+        stroke="url(#zGrad)"
+        stroke-width="2.4"
+        stroke-linejoin="miter"
+        transform="translate(138.6, 114.7) scale(3.748)" />
+
+  <!-- 5b. Outer edge white highlight outline -->
+  <path d="M 1.14 0 H 59.1 v 7.53 l -46.65 57.15 h 47.79 v 8.31 H 0 v -7.53 l 46.65 -57.15 H 1.14 Z" 
+        fill="none" 
+        stroke="#ffffff"
+        stroke-width="2.8"
+        stroke-opacity="0.6"
+        stroke-linejoin="miter"
+        transform="translate(138.6, 114.7) scale(3.748)" />
+
+  <!-- 5c. Top fill overlay to keep the white highlight extremely sharp and outer-only -->
+  <path d="M 1.14 0 H 59.1 v 7.53 l -46.65 57.15 h 47.79 v 8.31 H 0 v -7.53 l 46.65 -57.15 H 1.14 Z" 
+        fill="url(#zGrad)" 
+        stroke="url(#zGrad)"
+        stroke-width="2.2"
+        stroke-linejoin="miter"
+        transform="translate(138.6, 114.7) scale(3.748)" />
+</svg>
