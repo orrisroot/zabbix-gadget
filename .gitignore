@@ -1,0 +1,21 @@
+# Rust build artifacts
+target/
+
+# Node
+node_modules/
+
+# Vite build
+dist/
+gen/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local

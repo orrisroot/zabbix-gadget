@@ -1,0 +1,18 @@
+# Zabbix Gadget Configuration
+# This file is loaded from ~/.config/zabbix-gadget/zabbix.toml
+
+[[servers]]
+label = "Production"
+host = "https://zabbix.example.com/"
+user = "Admin"
+pass = "your_password"
+
+# [[servers]]
+# label = "Development"
+# host = "http://zabbix-dev.local/"
+# user = "Admin"
+# pass = "dev_password"
+
+[settings]
+refresh_interval_seconds = 300
+theme = "dark" # Visual theme: "dark" (default) or "light"

@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg-app: #f8fafc; /* slate-50 */
+  --bg-header: #f1f5f9; /* slate-100 */
+  --border-color: #cbd5e1; /* slate-300 */
+  --text-primary: #0f172a; /* slate-900 */
+  --text-secondary: #475569; /* slate-600 */
+  --text-muted: #64748b; /* slate-500 */
+}
+
+.dark {
+  --bg-app: #030712; /* gray-950 */
+  --bg-header: #111827; /* gray-900 */
+  --border-color: #1f2937; /* gray-800 */
+  --text-primary: #f1f5f9; /* slate-100 */
+  --text-secondary: #94a3b8; /* slate-400 */
+  --text-muted: #64748b; /* slate-500 */
+}
+
+/* Normalize and Reset CSS */
+*,
+::before,
+::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box !important;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  font-family: "Inter", "Noto Sans JP", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 8.5pt;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: transparent !important;
+}
+
+/* Explicit layout container paddings and window styles to ensure rendering on all webviews */
+.app-container {
+  padding: 0 !important;
+  gap: 0 !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 0px !important;
+  overflow: hidden !important;
+  background-color: var(--bg-app) !important;
+  color: var(--text-primary) !important;
+}
+
+.app-header {
+  padding: 8px 12px !important;
+  background-color: var(--bg-header) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.app-main {
+  padding: 8px 6px 4px 6px !important; /* aligns table columns perfectly with 12px header padding */
+}
+
+.app-footer {
+  padding: 0 12px 8px 12px !important;
+}
+
+/* Scrollbar styling */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.45) var(--bg-header);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: var(--bg-app);
+  border-radius: 2.5px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.45);
+  border-radius: 2.5px;
+  border: 1px solid var(--border-color);
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.75);
+}
