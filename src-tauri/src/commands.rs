@@ -41,6 +41,7 @@ pub async fn login(
         &server.host,
         &server.user,
         &server.pass,
+        server.api_key,
         server.basic_auth_user,
         server.basic_auth_pass,
     );
@@ -65,6 +66,7 @@ pub async fn fetch_triggers(
         &server.host,
         &server.user,
         &server.pass,
+        server.api_key.clone(),
         server.basic_auth_user.clone(),
         server.basic_auth_pass.clone(),
     );

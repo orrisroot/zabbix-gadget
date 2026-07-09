@@ -11,7 +11,7 @@ A modern desktop gadget for monitoring Zabbix server triggers, built with **Taur
 - **Auto-refresh**: Configurable refresh interval (default: 5 minutes)
 - **Frameless window**: Always-on-top transparent gadget window
 - **System Tray support**: Runs in the background and can be toggled from the system tray menu
-- **Settings UI**: Configure servers and settings directly in the application
+- **Settings UI**: Configure and reorder (via drag-and-drop) servers directly in the application
 - **Lightweight**: Tauri-based, minimal resource usage
 
 ## Prerequisites
@@ -38,20 +38,21 @@ npm run tauri build
 Create a configuration file at `~/.config/zabbix-gadget/zabbix.toml`:
 
 ```toml
+# Authentication using API Key (Default / Recommended)
 [[servers]]
-label = "Production"
+label = "Production (API Key)"
+host = "https://zabbix.example.com/"
+api_key = "your_zabbix_api_key"
+
+# Or authentication using User/Password
+[[servers]]
+label = "Production (User/Pass)"
 host = "https://zabbix.example.com/"
 user = "Admin"
 pass = "your_password"
 # Optional HTTP Basic Authentication if Zabbix is behind a basic auth proxy
 basic_auth_user = "proxy_user"
 basic_auth_pass = "proxy_pass"
-
-[[servers]]
-label = "Development"
-host = "http://zabbix-dev.local/"
-user = "Admin"
-pass = "dev_password"
 
 [settings]
 refresh_interval_seconds = 300

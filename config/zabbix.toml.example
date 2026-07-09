@@ -1,19 +1,20 @@
 # Zabbix Gadget Configuration
 # This file is loaded from ~/.config/zabbix-gadget/zabbix.toml
 
+# Authentication using API Key (Default / Recommended)
 [[servers]]
-label = "Production"
+label = "Production (API Key)"
 host = "https://zabbix.example.com/"
-user = "Admin"
-pass = "your_password"
+api_key = "your_zabbix_api_key"
+
+# Or authentication using User/Password
+# [[servers]]
+# label = "Production (User/Pass)"
+# host = "https://zabbix.example.com/"
+# user = "Admin"
+# pass = "your_password"
 # basic_auth_user = "proxy_user"  # Optional HTTP Basic Authentication username
 # basic_auth_pass = "proxy_pass"  # Optional HTTP Basic Authentication password
-
-# [[servers]]
-# label = "Development"
-# host = "http://zabbix-dev.local/"
-# user = "Admin"
-# pass = "dev_password"
 
 [settings]
 refresh_interval_seconds = 300

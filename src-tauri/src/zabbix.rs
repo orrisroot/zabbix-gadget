@@ -49,6 +49,7 @@ pub struct ZabbixClient {
     pub host: String,
     pub user: String,
     pub pass: String,
+    pub api_key: Option<String>,
     pub basic_auth_user: Option<String>,
     pub basic_auth_pass: Option<String>,
     pub auth_token: Option<String>,
@@ -60,6 +61,7 @@ impl ZabbixClient {
         host: &str,
         user: &str,
         pass: &str,
+        api_key: Option<String>,
         basic_auth_user: Option<String>,
         basic_auth_pass: Option<String>,
     ) -> Self {
@@ -71,6 +73,7 @@ impl ZabbixClient {
             host: host.to_string(),
             user: user.to_string(),
             pass: pass.to_string(),
+            api_key,
             basic_auth_user,
             basic_auth_pass,
             auth_token: None,
@@ -84,6 +87,43 @@ impl ZabbixClient {
     }
 
     pub async fn login(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(ref api_key) = self.api_key {
+            self.auth_token = Some(api_key.clone());
+            let url = self.api_url();
+            let mut req = self.client.post(&url);
+            if let Some(ref b_user) = self.basic_auth_user {
+                req = req.basic_auth(b_user, self.basic_auth_pass.as_deref());
+            }
+            let response: ZabbixApiResponse<serde_json::Value> = req
+                .json(&json!({
+                    "jsonrpc": "2.0",
+                    "method": "trigger.get",
+                    "params": {
+                        "output": "triggerid",
+                        "limit": 1
+                    },
+                    "auth": api_key,
+                    "id": 1
+                }))
+                .send()
+                .await?
+                .json()
+                .await?;
+
+            if let Some(err) = response.error {
+                let err_msg = match err.data {
+                    Some(data) => format!(
+                        "Zabbix API Key Error {}: {} ({})",
+                        err.code, err.message, data
+                    ),
+                    None => format!("Zabbix API Key Error {}: {}", err.code, err.message),
+                };
+                self.auth_token = None;
+                return Err(err_msg.into());
+            }
+            return Ok(());
+        }
+
         let url = self.api_url();
 
         let mut req = self.client.post(&url);

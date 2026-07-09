@@ -3,6 +3,7 @@ export interface ServerConfig {
   host: string;
   user: string;
   pass: string;
+  api_key?: string;
   basic_auth_user?: string;
   basic_auth_pass?: string;
 }

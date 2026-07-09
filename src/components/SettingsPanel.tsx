@@ -6,6 +6,7 @@ import {
   CheckCircle,
   ChevronDown,
   Edit2,
+  GripVertical,
   Plus,
   RefreshCw,
   Server as ServerIcon,
@@ -36,11 +37,16 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [formHost, setFormHost] = useState('');
   const [formUser, setFormUser] = useState('');
   const [formPass, setFormPass] = useState('');
+  const [formApiKey, setFormApiKey] = useState('');
+  const [authType, setAuthType] = useState<'userpass' | 'apikey'>('apikey');
   const [formBasicAuthUser, setFormBasicAuthUser] = useState('');
   const [formBasicAuthPass, setFormBasicAuthPass] = useState('');
   const [useBasicAuth, setUseBasicAuth] = useState(false);
 
   const [editIndex, setEditIndex] = useState<number | null>(null);
+
+  // Drag and drop states
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // Connection test statuses
   const [testStatus, setTestStatus] = useState<{
@@ -53,7 +59,17 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
   useEffect(() => {
     setFormTestStatus('idle');
     setFormErrorMessage(null);
-  }, [formLabel, formHost, formUser, formPass, formBasicAuthUser, formBasicAuthPass, useBasicAuth]);
+  }, [
+    formLabel,
+    formHost,
+    formUser,
+    formPass,
+    formApiKey,
+    authType,
+    formBasicAuthUser,
+    formBasicAuthPass,
+    useBasicAuth,
+  ]);
 
   // Sync local states with config when it is loaded or updated in the store
   useEffect(() => {
@@ -82,6 +98,8 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     setFormHost('');
     setFormUser('');
     setFormPass('');
+    setFormApiKey('');
+    setAuthType('apikey');
     setFormBasicAuthUser('');
     setFormBasicAuthPass('');
     setUseBasicAuth(false);
@@ -96,6 +114,8 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     setFormHost(s.host);
     setFormUser(s.user);
     setFormPass(s.pass);
+    setFormApiKey(s.api_key ?? '');
+    setAuthType(s.api_key ? 'apikey' : 'userpass');
     setFormBasicAuthUser(s.basic_auth_user ?? '');
     setFormBasicAuthPass(s.basic_auth_pass ?? '');
     setUseBasicAuth(!!s.basic_auth_user);
@@ -107,8 +127,9 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     const newServer: ServerConfig = {
       label: formLabel.trim(),
       host: formHost.trim(),
-      user: formUser.trim(),
-      pass: formPass.trim(),
+      user: authType === 'userpass' ? formUser.trim() : '',
+      pass: authType === 'userpass' ? formPass.trim() : '',
+      ...(authType === 'apikey' ? { api_key: formApiKey.trim() } : {}),
       ...(useBasicAuth
         ? {
             basic_auth_user: formBasicAuthUser.trim(),
@@ -126,8 +147,9 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     updatedServers[editIndex] = {
       label: formLabel.trim(),
       host: formHost.trim(),
-      user: formUser.trim(),
-      pass: formPass.trim(),
+      user: authType === 'userpass' ? formUser.trim() : '',
+      pass: authType === 'userpass' ? formPass.trim() : '',
+      ...(authType === 'apikey' ? { api_key: formApiKey.trim() } : { api_key: undefined }),
       ...(useBasicAuth
         ? {
             basic_auth_user: formBasicAuthUser.trim(),
@@ -146,6 +168,47 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     } else if (editIndex !== null && editIndex > idx) {
       setEditIndex(editIndex - 1);
     }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const updated = [...servers];
+    const draggedItem = updated[draggedIndex];
+    updated.splice(draggedIndex, 1);
+    updated.splice(index, 0, draggedItem);
+    setServers(updated);
+
+    if (editIndex !== null) {
+      if (editIndex === draggedIndex) {
+        setEditIndex(index);
+      } else {
+        let newEditIndex = editIndex;
+        if (draggedIndex < editIndex && index >= editIndex) {
+          newEditIndex -= 1;
+        } else if (draggedIndex > editIndex && index <= editIndex) {
+          newEditIndex += 1;
+        }
+        setEditIndex(newEditIndex);
+      }
+    }
+
+    setDraggedIndex(index);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   const handleTest = async (server: ServerConfig) => {
@@ -169,8 +232,9 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
       const serverToTest: ServerConfig = {
         label: formLabel.trim() || 'Test Connection',
         host: formHost.trim(),
-        user: formUser.trim(),
-        pass: formPass.trim(),
+        user: authType === 'userpass' ? formUser.trim() : '',
+        pass: authType === 'userpass' ? formPass.trim() : '',
+        ...(authType === 'apikey' ? { api_key: formApiKey.trim() } : {}),
         ...(useBasicAuth
           ? {
               basic_auth_user: formBasicAuthUser.trim(),
@@ -284,25 +348,37 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                 return (
                   <div
                     key={i}
-                    className={`settings-server-item flex items-center justify-between rounded-lg border transition-all duration-200 ${
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, i)}
+                    onDragOver={(e) => handleDragOver(e, i)}
+                    onDrop={handleDrop}
+                    onDragEnd={handleDragEnd}
+                    className={`settings-server-item flex items-center justify-between rounded-lg border transition-all duration-200 cursor-grab active:cursor-grabbing ${
                       isEditingThis
                         ? 'bg-indigo-50/50 dark:bg-indigo-950/30 border-indigo-500/80 shadow-[0_0_8px_rgba(99,102,241,0.2)]'
-                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 hover:bg-slate-100/50 dark:hover:bg-slate-900/80'
+                        : draggedIndex === i
+                          ? 'opacity-40 bg-indigo-50/30 dark:bg-indigo-950/20 border-dashed border-indigo-400'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 hover:bg-slate-100/50 dark:hover:bg-slate-900/80'
                     }`}
                   >
-                    <div className="flex-1 min-w-0 pr-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-extrabold text-slate-900 dark:text-white tracking-wide truncate">
-                          {s.label}
-                        </span>
-                        {isEditingThis && (
-                          <span className="settings-editing-badge text-sm bg-indigo-500/30 text-indigo-200 border border-indigo-500/40 rounded font-bold animate-pulse">
-                            Editing
-                          </span>
-                        )}
+                    <div className="flex-1 min-w-0 pr-3 flex items-center gap-2">
+                      <div className="text-slate-400 dark:text-slate-650 cursor-grab hover:text-slate-600 dark:hover:text-slate-400 select-none">
+                        <GripVertical size={14} />
                       </div>
-                      <div className="text-sm text-slate-500 dark:text-slate-300 font-medium truncate mt-0.5 pl-0">
-                        {s.host.replace(/^https?:\/\//, '')}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-extrabold text-slate-900 dark:text-white tracking-wide truncate">
+                            {s.label}
+                          </span>
+                          {isEditingThis && (
+                            <span className="settings-editing-badge text-sm bg-indigo-500/30 text-indigo-200 border border-indigo-500/40 rounded font-bold animate-pulse">
+                              Editing
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm text-slate-500 dark:text-slate-300 font-medium truncate mt-0.5 pl-0">
+                          {s.host.replace(/^https?:\/\//, '')}
+                        </div>
                       </div>
                     </div>
 
@@ -393,22 +469,58 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
               onChange={(e) => setFormHost(e.target.value)}
               className="settings-input w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
             />
-            {/* User & Password */}
-            <div className="flex gap-2">
-              <input
-                placeholder="User"
-                value={formUser}
-                onChange={(e) => setFormUser(e.target.value)}
-                className="settings-input flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-              />
-              <input
-                placeholder="Password"
-                type="password"
-                value={formPass}
-                onChange={(e) => setFormPass(e.target.value)}
-                className="settings-input flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-              />
+            {/* Authentication Type Switch */}
+            <div className="flex gap-2 bg-slate-200/55 dark:bg-slate-900/55 p-0.5 rounded border border-slate-300/40 dark:border-slate-800/40">
+              <button
+                type="button"
+                onClick={() => setAuthType('apikey')}
+                className={`flex-1 text-xs py-1 rounded font-bold transition-all cursor-pointer ${
+                  authType === 'apikey'
+                    ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400 font-extrabold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200'
+                }`}
+              >
+                API Key
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthType('userpass')}
+                className={`flex-1 text-xs py-1 rounded font-bold transition-all cursor-pointer ${
+                  authType === 'userpass'
+                    ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400 font-extrabold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200'
+                }`}
+              >
+                User / Password
+              </button>
             </div>
+
+            {/* User & Password or API Key Input */}
+            {authType === 'userpass' ? (
+              <div className="flex gap-2">
+                <input
+                  placeholder="User"
+                  value={formUser}
+                  onChange={(e) => setFormUser(e.target.value)}
+                  className="settings-input flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                />
+                <input
+                  placeholder="Password"
+                  type="password"
+                  value={formPass}
+                  onChange={(e) => setFormPass(e.target.value)}
+                  className="settings-input flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                />
+              </div>
+            ) : (
+              <input
+                placeholder="API Key"
+                type="password"
+                value={formApiKey}
+                onChange={(e) => setFormApiKey(e.target.value)}
+                className="settings-input w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+              />
+            )}
             {/* Basic Auth Checkbox */}
             <div className="flex items-center gap-2 px-1 py-0.5 mt-0.5">
               <input

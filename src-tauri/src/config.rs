@@ -7,8 +7,12 @@ use std::sync::OnceLock;
 pub struct ServerConfig {
     pub label: String,
     pub host: String,
+    #[serde(default)]
     pub user: String,
+    #[serde(default)]
     pub pass: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub api_key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub basic_auth_user: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -246,6 +250,7 @@ mod tests {
                 host: "http://localhost".to_string(),
                 user: "Admin".to_string(),
                 pass: "zabbix".to_string(),
+                api_key: None,
                 basic_auth_user: None,
                 basic_auth_pass: None,
             }],

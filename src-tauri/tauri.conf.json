@@ -29,7 +29,7 @@
         "label": "settings",
         "title": "Settings",
         "width": 420,
-        "height": 540,
+        "height": 640,
         "resizable": false,
         "fullscreen": false,
         "decorations": false,
