@@ -163,7 +163,15 @@ impl ZabbixClient {
             return Err(err_msg.into());
         }
 
-        Ok(response.result.ok_or("Empty result from Zabbix fetch")?)
+        let mut triggers = response.result.ok_or("Empty result from Zabbix fetch")?;
+        for t in &mut triggers {
+            if let Some(ref hosts) = t.hosts {
+                if let Some(first_host) = hosts.first() {
+                    t.hostname = Some(first_host.host_name.clone());
+                }
+            }
+        }
+        Ok(triggers)
     }
 }
 
