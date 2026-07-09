@@ -18,6 +18,10 @@
     "core:window:allow-set-focus",
     "shell:allow-open",
     "allow-app-commands",
-    "core:window:allow-set-theme"
+    "core:window:allow-set-theme",
+    "dialog:default",
+    "updater:default",
+    "process:allow-restart",
+    "window-state:default"
   ]
 }

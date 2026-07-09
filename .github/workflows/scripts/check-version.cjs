@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const rootDir = path.resolve(__dirname, '../../..');
 
@@ -61,7 +61,9 @@ if (cargoVersion !== tagVersion) {
   hasMismatch = true;
 }
 if (tauriVersion !== tagVersion) {
-  console.error(`[FAIL] src-tauri/tauri.conf.json version (${tauriVersion}) does not match tag version (${tagVersion})`);
+  console.error(
+    `[FAIL] src-tauri/tauri.conf.json version (${tauriVersion}) does not match tag version (${tagVersion})`,
+  );
   hasMismatch = true;
 }
 

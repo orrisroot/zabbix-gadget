@@ -9,8 +9,8 @@ A modern desktop gadget for monitoring Zabbix server triggers, built with **Taur
 - **Color-coded status**: 6 severity levels with distinct colors
 - **Hover tooltips**: See trigger details on hover
 - **Auto-refresh**: Configurable refresh interval (default: 5 minutes)
-- **Frameless window**: Always-on-top transparent gadget window
-- **System Tray support**: Runs in the background and can be toggled from the system tray menu
+- **Frameless window**: Always-on-top transparent gadget window with automatic position and size restoration across restarts
+- **System Tray support**: Runs in the background, toggles window visibility, and supports checking/applying updates and relaunching directly from the tray menu
 - **Settings UI**: Configure and reorder (via drag-and-drop) servers directly in the application
 - **Lightweight**: Tauri-based, minimal resource usage
 
@@ -130,6 +130,16 @@ npx vite build
 
 # Check Rust code
 cd src-tauri && cargo check
+```
+
+### Troubleshooting Linux AppImage Build
+
+If bundling the AppImage fails on Linux (e.g., due to FUSE errors or `Unable to recognise the format` / `.relr.dyn` section errors in `linuxdeploy`), set the following environment variables before building:
+
+```bash
+export APPIMAGE_EXTRACT_AND_RUN=1
+export NO_STRIP=true
+npm run tauri build
 ```
 
 ## License
