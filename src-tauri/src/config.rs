@@ -99,10 +99,10 @@ fn get_system_config_dir() -> Option<PathBuf> {
     None
 }
 
-pub fn init_config() -> Result<(), Box<dyn std::error::Error>> {
+pub fn init_config(product_name: &str) -> Result<(), Box<dyn std::error::Error>> {
     let config_dir = get_system_config_dir()
         .ok_or_else(|| "Failed to get user config directory".to_string())?
-        .join("zabbix-gadget");
+        .join(product_name);
     let config_path = config_dir.join("zabbix.toml");
 
     let _ = CONFIG_DIR.set(config_dir.clone());

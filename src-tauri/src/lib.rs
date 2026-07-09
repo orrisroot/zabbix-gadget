@@ -70,8 +70,15 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
 pub fn run() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("debug")).init();
 
-    // Initialize config immediately on startup before creating the Tauri application context
-    if let Err(e) = config::init_config() {
+    let context = tauri::generate_context!();
+    let product_name = context
+        .config()
+        .product_name
+        .as_deref()
+        .unwrap_or("zabbix-gadget");
+
+    // Initialize config immediately on startup
+    if let Err(e) = config::init_config(product_name) {
         log::error!("Failed to initialize config: {}", e);
     }
 
@@ -99,6 +106,6 @@ pub fn run() {
             commands::get_config_dir,
             commands::close_app,
         ])
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running tauri application");
 }

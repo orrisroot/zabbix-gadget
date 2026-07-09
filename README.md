@@ -88,8 +88,10 @@ zabbix-gadget/
 │   ├── index.css
 │   ├── components/
 │   │   ├── Header.tsx
-│   │   ├── TriggerTable.tsx
-│   │   └── TriggerCell.tsx
+│   │   ├── SettingsPanel.tsx
+│   │   ├── TooltipPanel.tsx
+│   │   ├── TriggerCell.tsx
+│   │   └── TriggerTable.tsx
 │   ├── hooks/
 │   │   ├── useZabbix.ts
 │   │   └── useConfig.ts
