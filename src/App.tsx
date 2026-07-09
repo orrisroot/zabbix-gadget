@@ -73,8 +73,8 @@ function App() {
         const mainHeight = mainContentEl ? mainContentEl.getBoundingClientRect().height : 120;
         const footerHeight = footerEl ? footerEl.getBoundingClientRect().height : 0;
 
-        // Sum elements + main paddings (8px top, 4px bottom) + container border (2px) + 12px safety buffer to prevent subpixel scrollbars and OS border discrepancies
-        const totalHeight = Math.ceil(headerHeight + mainHeight + footerHeight + 12 + 2 + 12);
+        // Sum elements + main paddings (4px top, 4px bottom) + container border (2px) + 8px safety buffer to prevent subpixel scrollbars and OS border discrepancies
+        const totalHeight = Math.ceil(headerHeight + mainHeight + footerHeight + 8 + 2 + 8);
 
         // Cap the window height at 550px max to prevent overflow on small screens
         const targetHeight = Math.min(totalHeight, 550);
@@ -172,22 +172,22 @@ function App() {
                 <th className="text-left pb-2 px-2 w-[110px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   Server
                 </th>
-                <th className="text-center pb-2 w-[80px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-center pb-2 w-[70px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   Disaster
                 </th>
-                <th className="text-center pb-2 w-[80px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-center pb-2 w-[70px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   High
                 </th>
-                <th className="text-center pb-2 w-[80px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-center pb-2 w-[70px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   Average
                 </th>
-                <th className="text-center pb-2 w-[80px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-center pb-2 w-[70px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   Warning
                 </th>
-                <th className="text-center pb-2 w-[80px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-center pb-2 w-[70px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   Information
                 </th>
-                <th className="text-center pb-2 w-[80px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
+                <th className="text-center pb-2 w-[70px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
                   Not classified
                 </th>
               </tr>
@@ -218,7 +218,7 @@ function App() {
         )}
       </main>
       {hasServers && (
-        <footer className="app-footer flex justify-between text-slate-500 dark:text-gray-500 text-xs">
+        <footer className="app-footer flex justify-between text-slate-500 dark:text-gray-300 text-xxs">
           <span>Refresh Interval: {intervalLabel}</span>
           <span>Updated: {lastUpdate.toLocaleString()}</span>
         </footer>

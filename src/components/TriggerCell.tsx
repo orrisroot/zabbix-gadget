@@ -32,7 +32,7 @@ function TriggerCell({ priority, status, isError, isLoading }: TriggerCellProps)
   const getCellTextColor = () => {
     if (isError || isLoading) return 'text-slate-200 dark:text-slate-400';
     if (count === 0) return 'text-white';
-    if (priority === '2') return 'text-slate-900'; // Warning uses bg-yellow-500, dark text yields superior contrast
+    if (['2', '3'].includes(priority)) return 'text-slate-900';
     return 'text-white';
   };
 
