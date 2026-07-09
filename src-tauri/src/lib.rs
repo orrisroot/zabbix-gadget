@@ -20,14 +20,60 @@ fn set_window_visibility(window: &tauri::WebviewWindow, visible: bool) -> Result
     Ok(())
 }
 
-fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    // Set up system tray menu items
+#[derive(Debug, Clone, Copy)]
+enum TrayMenuState {
+    Normal,
+    UpdateAvailable,
+    RelaunchPending,
+}
+
+fn set_tray_menu(
+    app: &tauri::AppHandle,
+    state: TrayMenuState,
+) -> Result<(), Box<dyn std::error::Error>> {
+    use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+
     let show_i = MenuItem::with_id(app, "show", "Show Window", true, None::<&str>)?;
     let check_update_i =
         MenuItem::with_id(app, "check_update", "Check for Updates", true, None::<&str>)?;
     let install_update_i =
         MenuItem::with_id(app, "install_update", "Install Update", true, None::<&str>)?;
     let relaunch_i = MenuItem::with_id(app, "relaunch", "Relaunch", true, None::<&str>)?;
+    let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+    let sep1 = PredefinedMenuItem::separator(app)?;
+    let sep2 = PredefinedMenuItem::separator(app)?;
+
+    let mut menu_items: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = vec![&show_i, &sep1];
+
+    match state {
+        TrayMenuState::Normal => {
+            menu_items.push(&check_update_i);
+        }
+        TrayMenuState::UpdateAvailable => {
+            menu_items.push(&install_update_i);
+        }
+        TrayMenuState::RelaunchPending => {
+            menu_items.push(&relaunch_i);
+        }
+    }
+
+    menu_items.push(&sep2);
+    menu_items.push(&quit_i);
+
+    let menu = Menu::with_items(app, &menu_items)?;
+
+    if let Some(tray) = app.tray_by_id("main_tray") {
+        tray.set_menu(Some(menu))?;
+    }
+
+    Ok(())
+}
+
+fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    // Set up initial system tray menu items (Normal state)
+    let show_i = MenuItem::with_id(app, "show", "Show Window", true, None::<&str>)?;
+    let check_update_i =
+        MenuItem::with_id(app, "check_update", "Check for Updates", true, None::<&str>)?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
     let menu = Menu::with_items(
@@ -36,15 +82,13 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
             &show_i,
             &PredefinedMenuItem::separator(app)?,
             &check_update_i,
-            &install_update_i,
-            &relaunch_i,
             &PredefinedMenuItem::separator(app)?,
             &quit_i,
         ],
     )?;
 
     // Build system tray icon
-    let mut tray_builder = TrayIconBuilder::new()
+    let mut tray_builder = TrayIconBuilder::with_id("main_tray")
         .menu(&menu)
         .show_menu_on_left_click(false);
 
@@ -155,6 +199,9 @@ async fn check_and_prompt_update(app: &tauri::AppHandle) {
     match app.updater() {
         Ok(updater) => match updater.check().await {
             Ok(Some(update)) => {
+                // Change menu state to UpdateAvailable
+                let _ = set_tray_menu(app, TrayMenuState::UpdateAvailable);
+
                 let message = format!(
                         "A new version v{} is available (current version: v{}).\nDo you want to download and install it now?",
                         update.version,
@@ -180,12 +227,11 @@ async fn check_and_prompt_update(app: &tauri::AppHandle) {
                                 .show(|_| {});
                         } else {
                             app_handle.dialog()
-                                    .message("Update installed successfully. The application will now restart.")
+                                    .message("Update installed successfully. Please click 'Relaunch' from the tray menu to apply the update.")
                                     .title("Update Success")
                                     .kind(MessageDialogKind::Info)
                                     .show(|_| {});
-                            let _ = app_handle.save_window_state(StateFlags::all());
-                            app_handle.restart();
+                            let _ = set_tray_menu(&app_handle, TrayMenuState::RelaunchPending);
                         }
                     });
                 }
@@ -232,12 +278,11 @@ async fn perform_update_immediately(app: &tauri::AppHandle) {
                         .show(|_| {});
                 } else {
                     app.dialog()
-                        .message("Update installed successfully. The application will now restart.")
+                        .message("Update installed successfully. Please click 'Relaunch' from the tray menu to apply the update.")
                         .title("Update Success")
                         .kind(MessageDialogKind::Info)
                         .show(|_| {});
-                    let _ = app.save_window_state(StateFlags::all());
-                    app.restart();
+                    let _ = set_tray_menu(app, TrayMenuState::RelaunchPending);
                 }
             }
             Ok(None) => {
@@ -246,6 +291,7 @@ async fn perform_update_immediately(app: &tauri::AppHandle) {
                     .title("Up to Date")
                     .kind(MessageDialogKind::Info)
                     .show(|_| {});
+                let _ = set_tray_menu(app, TrayMenuState::Normal);
             }
             Err(e) => {
                 app.dialog()
