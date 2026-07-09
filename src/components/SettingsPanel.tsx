@@ -193,18 +193,22 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
 
   const handleSave = async () => {
     if (!config) return;
-    const newConfig = {
-      ...config,
-      servers,
-      settings: {
-        ...config.settings,
-        refresh_interval_seconds: refreshInterval,
-      },
-    };
-    await saveConfig(newConfig);
-    useZabbixStore.setState({ config: newConfig });
-    await emit('config-updated', newConfig);
-    onClose();
+    try {
+      const newConfig = {
+        ...config,
+        servers,
+        settings: {
+          ...config.settings,
+          refresh_interval_seconds: refreshInterval,
+        },
+      };
+      await saveConfig(newConfig);
+      useZabbixStore.setState({ config: newConfig });
+      await emit('config-updated', newConfig);
+      onClose();
+    } catch (err) {
+      console.error('Failed to save config:', err);
+    }
   };
 
   const handleMouseDown = async (e: React.MouseEvent) => {

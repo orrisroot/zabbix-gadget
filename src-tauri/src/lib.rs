@@ -50,6 +50,9 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
         })
         .on_menu_event(|app, event| match event.id().as_ref() {
             "quit" => {
+                for window in app.webview_windows().values() {
+                    let _ = window.destroy();
+                }
                 app.exit(0);
             }
             "show" => {
@@ -66,6 +69,12 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
 
 pub fn run() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("debug")).init();
+
+    // Initialize config immediately on startup before creating the Tauri application context
+    if let Err(e) = config::init_config() {
+        log::error!("Failed to initialize config: {}", e);
+    }
+
     tauri::Builder::default()
         .manage(zabbix::ZabbixSessionStore::default())
         .plugin(tauri_plugin_shell::init())
@@ -79,9 +88,6 @@ pub fn run() {
             }
         })
         .setup(|app| {
-            if let Err(e) = config::init_config(app) {
-                log::error!("Failed to initialize config: {}", e);
-            }
             setup_system_tray(app)?;
             Ok(())
         })

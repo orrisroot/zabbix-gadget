@@ -17,11 +17,10 @@ export function useConfig() {
     !window.location.search.includes('window=tooltip');
 
   useEffect(() => {
-    console.log('useConfig: loading config...');
     const loadAndSetConfig = async () => {
       try {
         const cfg = await getConfig();
-        console.log('useConfig: config loaded:', cfg);
+        console.log('useConfig: configuration loaded');
         useZabbixStore.setState({ config: cfg });
       } catch (e) {
         console.error('Failed to load config:', e);
@@ -34,7 +33,6 @@ export function useConfig() {
       try {
         const appWindow = getCurrentWebviewWindow();
         const visible = await appWindow.isVisible();
-        console.log('useConfig: initial visibility check:', visible);
         setIsVisible(visible);
       } catch (err) {
         console.error('Failed to get initial visibility:', err);
@@ -47,7 +45,7 @@ export function useConfig() {
 
     // Listen for configuration updates from the settings window
     const unlistenConfigPromise = listen<AppConfig>('config-updated', (event) => {
-      console.log('useConfig: config updated event received:', event.payload);
+      console.log('useConfig: configuration updated');
       useZabbixStore.setState({ config: event.payload });
     });
 
@@ -55,7 +53,6 @@ export function useConfig() {
     if (isMainWindow) {
       // Only listen for window visibility changes on the main window
       listen<boolean>('window-visibility', (event) => {
-        console.log('useConfig: window visibility changed:', event.payload);
         setIsVisible(event.payload);
       }).then((unlisten) => {
         unlistenVisibility = unlisten;

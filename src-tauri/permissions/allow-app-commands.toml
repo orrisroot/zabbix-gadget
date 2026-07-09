@@ -1,0 +1,11 @@
+[[permission]]
+identifier = "allow-app-commands"
+description = "Allow application custom commands"
+commands.allow = [
+    "get_config",
+    "save_config",
+    "get_config_dir",
+    "login",
+    "fetch_triggers",
+    "close_app"
+]

@@ -53,7 +53,6 @@ function App() {
   useEffect(() => {
     if (isSettingsWindow || isTooltipWindow) return;
 
-    console.log('App: useEffect for resize triggered');
     const updateWindowHeight = async () => {
       // Small timeout to allow DOM to render and stabilize
       await new Promise((resolve) => setTimeout(resolve, 150));
@@ -61,12 +60,6 @@ function App() {
       const headerEl = document.querySelector('.app-header');
       const mainContentEl = document.querySelector('.app-main table') || document.querySelector('.app-main > div');
       const footerEl = document.querySelector('.app-footer');
-
-      console.log('App: resize DOM elements check:', {
-        header: !!headerEl,
-        mainContent: !!mainContentEl,
-        footer: !!footerEl,
-      });
 
       if (headerEl) {
         const headerHeight = headerEl.getBoundingClientRect().height;
@@ -79,19 +72,9 @@ function App() {
         // Cap the window height at 550px max to prevent overflow on small screens
         const targetHeight = Math.min(totalHeight, 550);
 
-        console.log('App: calculated heights:', {
-          headerHeight,
-          mainHeight,
-          footerHeight,
-          totalHeight,
-          targetHeight,
-        });
-
         try {
           const appWindow = getCurrentWebviewWindow();
-          console.log('App: attempting resize to height:', targetHeight);
           await appWindow.setSize(new LogicalSize(670, targetHeight));
-          console.log('App: resize successful');
         } catch (err) {
           console.error('App: failed to resize window:', err);
         }

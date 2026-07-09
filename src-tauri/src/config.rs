@@ -2,8 +2,6 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
-use tauri::App;
-use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ServerConfig {
@@ -48,6 +46,7 @@ impl Default for AppConfig {
 
 static CONFIG_PATH: OnceLock<PathBuf> = OnceLock::new();
 static CONFIG_DIR: OnceLock<PathBuf> = OnceLock::new();
+static INIT_ERROR: OnceLock<Option<String>> = OnceLock::new();
 
 pub fn get_config_dir() -> PathBuf {
     CONFIG_DIR
@@ -83,38 +82,77 @@ fn secure_permissions(
     Ok(())
 }
 
-pub fn init_config(app: &App) -> Result<(), Box<dyn std::error::Error>> {
-    let config_dir = app.path().config_dir()?.join("zabbix-gadget");
+fn get_system_config_dir() -> Option<PathBuf> {
+    if let Some(path) = dirs::config_dir() {
+        return Some(path);
+    }
+    if let Ok(appdata) = std::env::var("APPDATA") {
+        return Some(PathBuf::from(appdata));
+    }
+    if let Ok(userprofile) = std::env::var("USERPROFILE") {
+        return Some(PathBuf::from(userprofile).join("AppData").join("Roaming"));
+    }
+    None
+}
+
+pub fn init_config() -> Result<(), Box<dyn std::error::Error>> {
+    let config_dir = get_system_config_dir()
+        .ok_or_else(|| "Failed to get user config directory".to_string())?
+        .join("zabbix-gadget");
     let config_path = config_dir.join("zabbix.toml");
 
     let _ = CONFIG_DIR.set(config_dir.clone());
     let _ = CONFIG_PATH.set(config_path.clone());
 
+    let result = init_config_inner(&config_dir, &config_path);
+    if let Err(ref e) = result {
+        let _ = INIT_ERROR.set(Some(e.to_string()));
+    } else {
+        let _ = INIT_ERROR.set(None);
+    }
+    result
+}
+
+fn init_config_inner(
+    config_dir: &PathBuf,
+    config_path: &PathBuf,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Create config directory if it doesn't exist
     if !config_dir.exists() {
-        fs::create_dir_all(&config_dir)?;
+        fs::create_dir_all(config_dir)?;
     }
     // Restrict access to the configuration directory to prevent other users on the system
     // from reading its contents or listing configuration files.
-    secure_permissions(&config_dir, 0o700)?;
+    secure_permissions(config_dir, 0o700)?;
 
     // Create default config file if it doesn't exist
     if !config_path.exists() {
         let default_config = AppConfig::default();
         let toml_string = toml::to_string_pretty(&default_config)?;
-        fs::write(&config_path, toml_string)?;
+        fs::write(config_path, toml_string)?;
     }
     // Restrict access to the configuration file since it contains credentials (passwords).
-    secure_permissions(&config_path, 0o600)?;
+    secure_permissions(config_path, 0o600)?;
 
     Ok(())
 }
 
 pub fn load_config() -> Result<AppConfig, Box<dyn std::error::Error>> {
+    if let Some(Some(err)) = INIT_ERROR.get() {
+        return Err(format!("Config initialization failed: {}", err).into());
+    }
     let config_path = get_config_path();
-    let content = fs::read_to_string(&config_path)?;
-    let config: AppConfig = toml::from_str(&content)?;
-    Ok(config)
+    match fs::read_to_string(&config_path) {
+        Ok(content) => {
+            let config: AppConfig = toml::from_str(&content)?;
+            Ok(config)
+        }
+        Err(ref e) if e.kind() == std::io::ErrorKind::NotFound => {
+            // Return default config gracefully if file does not exist (e.g. first boot)
+            Ok(AppConfig::default())
+        }
+        Err(e) => Err(e.into()),
+    }
 }
 
 pub fn save_config(config: &AppConfig) -> Result<(), Box<dyn std::error::Error>> {
