@@ -175,6 +175,7 @@ impl ZabbixClient {
                 "params": {
                     "output": "extend",
                     "monitored": true,
+                    "skipDependent": true,
                     "expandComment": 1,
                     "expandExpression": 1,
                     "expandDescription": 1,

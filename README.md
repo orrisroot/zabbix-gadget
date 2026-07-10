@@ -5,6 +5,7 @@ A modern desktop gadget for monitoring Zabbix server triggers, built with **Taur
 ## Features
 
 - **Real-time trigger monitoring**: Displays active triggers by severity level
+- **Trigger deduplication**: Automatically skips redundant lower-severity triggers when a higher-severity dependent trigger is active, utilizing Zabbix's built-in dependency resolution (`skipDependent: true`)
 - **Multi-server support**: Monitor multiple Zabbix servers simultaneously
 - **Color-coded status**: 6 severity levels with distinct colors
 - **Hover tooltips**: See trigger details on hover
