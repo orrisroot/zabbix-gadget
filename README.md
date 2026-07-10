@@ -9,7 +9,7 @@ A modern desktop gadget for monitoring Zabbix server triggers, built with **Taur
 - **Color-coded status**: 6 severity levels with distinct colors
 - **Hover tooltips**: See trigger details on hover
 - **Auto-refresh**: Configurable refresh interval (default: 5 minutes)
-- **Frameless window**: Always-on-top transparent gadget window with automatic position and size restoration across restarts
+- **Frameless window**: Always-on-top gadget window with automatic position and size restoration across restarts
 - **System Tray support**: Runs in the background, toggles window visibility, and supports checking/applying updates and relaunching directly from the tray menu
 - **Settings UI**: Configure and reorder (via drag-and-drop) servers directly in the application
 - **Lightweight**: Tauri-based, minimal resource usage
@@ -35,7 +35,11 @@ npm run tauri build
 
 ## Configuration
 
-Create a configuration file at `~/.config/zabbix-gadget/zabbix.toml`:
+Create a configuration file at the following path depending on your operating system:
+
+- **Linux**: `~/.config/zabbix-gadget/zabbix.toml`
+- **macOS**: `~/Library/Application Support/zabbix-gadget/zabbix.toml`
+- **Windows**: `%APPDATA%\zabbix-gadget\zabbix.toml` (typically `C:\Users\<User>\AppData\Roaming\zabbix-gadget\zabbix.toml`)
 
 ```toml
 # Authentication using API Key (Default / Recommended)
@@ -56,6 +60,7 @@ basic_auth_pass = "proxy_pass"
 
 [settings]
 refresh_interval_seconds = 300
+theme = "dark" # Visual theme: "dark" (default) or "light"
 ```
 
 See [config/zabbix.toml.example](config/zabbix.toml.example) for a template.
@@ -75,13 +80,16 @@ See [config/zabbix.toml.example](config/zabbix.toml.example) for a template.
 
 ```
 zabbix-gadget/
-├── Cargo.lock
 ├── package.json
+├── package-lock.json
 ├── index.html
 ├── vite.config.ts
 ├── tsconfig.json
+├── tsconfig.node.json
+├── biome.json
 ├── .gitignore
 ├── README.md
+├── AGENTS.md
 ├── src/                          # React + TypeScript (Vite)
 │   ├── main.tsx
 │   ├── App.tsx
@@ -102,6 +110,7 @@ zabbix-gadget/
 │       └── zabbix-api.ts
 ├── src-tauri/                    # Rust + Tauri
 │   ├── Cargo.toml
+│   ├── Cargo.lock
 │   ├── build.rs
 │   ├── tauri.conf.json
 │   ├── icons/

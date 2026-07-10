@@ -1,5 +1,8 @@
 # Zabbix Gadget Configuration
-# This file is loaded from ~/.config/zabbix-gadget/zabbix.toml
+# Config file path depends on your operating system:
+# - Linux:   ~/.config/zabbix-gadget/zabbix.toml
+# - macOS:   ~/Library/Application Support/zabbix-gadget/zabbix.toml
+# - Windows: %APPDATA%\zabbix-gadget\zabbix.toml (typically C:\Users\<User>\AppData\Roaming\zabbix-gadget\zabbix.toml)
 
 # Authentication using API Key (Default / Recommended)
 [[servers]]
