@@ -9,7 +9,7 @@ A modern desktop gadget for monitoring Zabbix server triggers, built with **Taur
 - **Color-coded status**: 6 severity levels with distinct colors
 - **Hover tooltips**: See trigger details on hover
 - **Auto-refresh**: Configurable refresh interval (default: 5 minutes)
-- **Frameless window**: Always-on-top gadget window with automatic position and size restoration across restarts
+- **Frameless window**: Always-on-top main gadget window with automatic position and size restoration across restarts (dialogs and tooltips are excluded from state saving to start in their default or relative positions)
 - **System Tray support**: Runs in the background, toggles window visibility, and supports checking/applying updates and relaunching directly from the tray menu
 - **Settings UI**: Configure and reorder (via drag-and-drop) servers directly in the application
 - **Lightweight**: Tauri-based, minimal resource usage

@@ -1,8 +1,8 @@
-import { LogicalSize } from '@tauri-apps/api/dpi';
+import { LogicalSize, PhysicalPosition } from '@tauri-apps/api/dpi';
 import { emit } from '@tauri-apps/api/event';
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { AlertCircle, Settings } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import SettingsPanel from '@/components/SettingsPanel';
 import TooltipPanel from '@/components/TooltipPanel';
@@ -20,6 +20,35 @@ function App() {
   const isTooltipWindow = typeof window !== 'undefined' && window.location.search.includes('window=tooltip');
   const isUpdateWindow = typeof window !== 'undefined' && window.location.search.includes('window=update');
   const hasServers = config?.servers && config.servers.length > 0;
+
+  const mainPosRef = useRef<PhysicalPosition | null>(null);
+
+  useEffect(() => {
+    if (isSettingsWindow || isTooltipWindow || isUpdateWindow) return;
+
+    let unlisten: (() => void) | null = null;
+
+    const setupListener = async () => {
+      try {
+        const appWindow = getCurrentWebviewWindow();
+        mainPosRef.current = await appWindow.outerPosition();
+
+        unlisten = await appWindow.onMoved(({ payload: position }) => {
+          mainPosRef.current = position;
+        });
+      } catch (err) {
+        console.error('Failed to setup window move listener:', err);
+      }
+    };
+
+    setupListener();
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, [isSettingsWindow, isTooltipWindow, isUpdateWindow]);
 
   const refreshInterval = config?.settings.refresh_interval_seconds ?? 300;
   const intervalMin = refreshInterval / 60;
@@ -53,7 +82,7 @@ function App() {
   }, [config?.settings.theme]);
 
   useEffect(() => {
-    if (isSettingsWindow || isTooltipWindow) return;
+    if (isSettingsWindow || isTooltipWindow || isUpdateWindow) return;
 
     const updateWindowHeight = async () => {
       // Small timeout to allow DOM to render and stabilize
@@ -71,8 +100,8 @@ function App() {
         // Sum elements + main paddings (4px top, 4px bottom) + container border (2px) + 8px safety buffer to prevent subpixel scrollbars and OS border discrepancies
         const totalHeight = Math.ceil(headerHeight + mainHeight + footerHeight + 8 + 2 + 8);
 
-        // Cap the window height at 550px max to prevent overflow on small screens
-        const targetHeight = Math.min(totalHeight, 550);
+        // Cap the window height between 120px min and 550px max to prevent shrinking
+        const targetHeight = Math.max(Math.min(totalHeight, 550), 120);
 
         try {
           const appWindow = getCurrentWebviewWindow();
@@ -86,12 +115,32 @@ function App() {
     };
 
     updateWindowHeight();
-  }, [config?.servers, serverStatuses, isSettingsWindow]);
+  }, [config?.servers, serverStatuses, isSettingsWindow, isUpdateWindow]);
 
   const handleSettingsClick = async () => {
     try {
       const settingsWin = await WebviewWindow.getByLabel('settings');
       if (settingsWin) {
+        const mainWin = getCurrentWebviewWindow();
+
+        let mainPos = mainPosRef.current;
+        if (!mainPos) {
+          mainPos = await mainWin.outerPosition();
+        }
+
+        const mainSize = await mainWin.outerSize();
+        const factor = await mainWin.scaleFactor();
+
+        // Settings window has a fixed size of 420x640 (defined in tauri.conf.json)
+        // Since it might be hidden initially, outerSize() can return 0, so we calculate it using scaleFactor
+        const settingsWidth = 420 * factor;
+        const settingsHeight = 640 * factor;
+
+        // Calculate center position relative to main window in physical pixels
+        const x = mainPos.x + Math.round((mainSize.width - settingsWidth) / 2);
+        const y = mainPos.y + Math.round((mainSize.height - settingsHeight) / 2);
+
+        await settingsWin.setPosition(new PhysicalPosition(x, y));
         await settingsWin.show();
         await settingsWin.setFocus();
       }

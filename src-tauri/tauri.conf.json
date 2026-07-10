@@ -16,6 +16,8 @@
         "title": "Zabbix Gadget",
         "width": 670,
         "height": 300,
+        "minWidth": 670,
+        "minHeight": 120,
         "resizable": true,
         "fullscreen": false,
         "decorations": false,
