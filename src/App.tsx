@@ -7,6 +7,7 @@ import Header from '@/components/Header';
 import SettingsPanel from '@/components/SettingsPanel';
 import TooltipPanel from '@/components/TooltipPanel';
 import TriggerTable from '@/components/TriggerTable';
+import UpdatePanel from '@/components/UpdatePanel';
 import { useConfig } from '@/hooks/useConfig';
 import { useZabbixStore } from '@/hooks/useZabbix';
 import { saveConfig } from '@/lib/zabbix-api';
@@ -17,6 +18,7 @@ function App() {
 
   const isSettingsWindow = typeof window !== 'undefined' && window.location.search.includes('window=settings');
   const isTooltipWindow = typeof window !== 'undefined' && window.location.search.includes('window=tooltip');
+  const isUpdateWindow = typeof window !== 'undefined' && window.location.search.includes('window=update');
   const hasServers = config?.servers && config.servers.length > 0;
 
   const refreshInterval = config?.settings.refresh_interval_seconds ?? 300;
@@ -133,6 +135,14 @@ function App() {
     return (
       <div className="h-full w-full bg-transparent select-none overflow-hidden flex flex-col">
         <TooltipPanel />
+      </div>
+    );
+  }
+
+  if (isUpdateWindow) {
+    return (
+      <div className="h-full w-full bg-transparent select-none overflow-hidden flex flex-col">
+        <UpdatePanel />
       </div>
     );
   }

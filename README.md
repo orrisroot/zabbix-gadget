@@ -99,7 +99,8 @@ zabbix-gadget/
 │   │   ├── SettingsPanel.tsx
 │   │   ├── TooltipPanel.tsx
 │   │   ├── TriggerCell.tsx
-│   │   └── TriggerTable.tsx
+│   │   ├── TriggerTable.tsx
+│   │   └── UpdatePanel.tsx
 │   ├── hooks/
 │   │   ├── useZabbix.ts
 │   │   └── useConfig.ts

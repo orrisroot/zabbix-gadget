@@ -6,7 +6,6 @@ use tauri::generate_handler;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
-use tauri_plugin_updater::UpdaterExt;
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 fn set_window_visibility(window: &tauri::WebviewWindow, visible: bool) -> Result<(), tauri::Error> {
@@ -21,13 +20,13 @@ fn set_window_visibility(window: &tauri::WebviewWindow, visible: bool) -> Result
 }
 
 #[derive(Debug, Clone, Copy)]
-enum TrayMenuState {
+pub(crate) enum TrayMenuState {
     Normal,
     UpdateAvailable,
     RelaunchPending,
 }
 
-fn set_tray_menu(
+pub(crate) fn set_tray_menu(
     app: &tauri::AppHandle,
     state: TrayMenuState,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -125,16 +124,18 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
                 }
             }
             "check_update" => {
-                let app_handle = app.clone();
-                tauri::async_runtime::spawn(async move {
-                    check_and_prompt_update(&app_handle).await;
-                });
+                if let Some(update_win) = app.get_webview_window("update") {
+                    let _ = update_win.show();
+                    let _ = update_win.set_focus();
+                    let _ = update_win.emit("trigger-check", ());
+                }
             }
             "install_update" => {
-                let app_handle = app.clone();
-                tauri::async_runtime::spawn(async move {
-                    perform_update_immediately(&app_handle).await;
-                });
+                if let Some(update_win) = app.get_webview_window("update") {
+                    let _ = update_win.show();
+                    let _ = update_win.set_focus();
+                    let _ = update_win.emit("trigger-check", ());
+                }
             }
             "relaunch" => {
                 let _ = app.save_window_state(StateFlags::all());
@@ -188,125 +189,10 @@ pub fn run() {
             commands::login,
             commands::get_config_dir,
             commands::close_app,
+            commands::check_for_update,
+            commands::install_update,
+            commands::relaunch_app,
         ])
         .run(context)
         .expect("error while running tauri application");
-}
-
-async fn check_and_prompt_update(app: &tauri::AppHandle) {
-    use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
-
-    match app.updater() {
-        Ok(updater) => match updater.check().await {
-            Ok(Some(update)) => {
-                // Change menu state to UpdateAvailable
-                let _ = set_tray_menu(app, TrayMenuState::UpdateAvailable);
-
-                let message = format!(
-                        "A new version v{} is available (current version: v{}).\nDo you want to download and install it now?",
-                        update.version,
-                        app.package_info().version
-                    );
-                let confirmed = app
-                    .dialog()
-                    .message(message)
-                    .title("Update Available")
-                    .kind(MessageDialogKind::Info)
-                    .buttons(MessageDialogButtons::YesNo)
-                    .blocking_show();
-
-                if confirmed {
-                    let app_handle = app.clone();
-                    tauri::async_runtime::spawn(async move {
-                        if let Err(e) = update.download_and_install(|_, _| {}, || {}).await {
-                            app_handle
-                                .dialog()
-                                .message(format!("Failed to install update: {}", e))
-                                .title("Update Error")
-                                .kind(MessageDialogKind::Error)
-                                .show(|_| {});
-                        } else {
-                            app_handle.dialog()
-                                    .message("Update installed successfully. Please click 'Relaunch' from the tray menu to apply the update.")
-                                    .title("Update Success")
-                                    .kind(MessageDialogKind::Info)
-                                    .show(|_| {});
-                            let _ = set_tray_menu(&app_handle, TrayMenuState::RelaunchPending);
-                        }
-                    });
-                }
-            }
-            Ok(None) => {
-                app.dialog()
-                    .message(format!(
-                        "You are up to date! Current version is v{}.",
-                        app.package_info().version
-                    ))
-                    .title("Up to Date")
-                    .kind(MessageDialogKind::Info)
-                    .show(|_| {});
-            }
-            Err(e) => {
-                app.dialog()
-                    .message(format!("Failed to check for updates:\n{}", e))
-                    .title("Update Error")
-                    .kind(MessageDialogKind::Error)
-                    .show(|_| {});
-            }
-        },
-        Err(e) => {
-            app.dialog()
-                .message(format!("Updater not available:\n{}", e))
-                .title("Update Error")
-                .kind(MessageDialogKind::Error)
-                .show(|_| {});
-        }
-    }
-}
-
-async fn perform_update_immediately(app: &tauri::AppHandle) {
-    use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
-
-    match app.updater() {
-        Ok(updater) => match updater.check().await {
-            Ok(Some(update)) => {
-                if let Err(e) = update.download_and_install(|_, _| {}, || {}).await {
-                    app.dialog()
-                        .message(format!("Failed to install update: {}", e))
-                        .title("Update Error")
-                        .kind(MessageDialogKind::Error)
-                        .show(|_| {});
-                } else {
-                    app.dialog()
-                        .message("Update installed successfully. Please click 'Relaunch' from the tray menu to apply the update.")
-                        .title("Update Success")
-                        .kind(MessageDialogKind::Info)
-                        .show(|_| {});
-                    let _ = set_tray_menu(app, TrayMenuState::RelaunchPending);
-                }
-            }
-            Ok(None) => {
-                app.dialog()
-                    .message("No updates available.")
-                    .title("Up to Date")
-                    .kind(MessageDialogKind::Info)
-                    .show(|_| {});
-                let _ = set_tray_menu(app, TrayMenuState::Normal);
-            }
-            Err(e) => {
-                app.dialog()
-                    .message(format!("Failed to check for updates:\n{}", e))
-                    .title("Update Error")
-                    .kind(MessageDialogKind::Error)
-                    .show(|_| {});
-            }
-        },
-        Err(e) => {
-            app.dialog()
-                .message(format!("Updater not available:\n{}", e))
-                .title("Update Error")
-                .kind(MessageDialogKind::Error)
-                .show(|_| {});
-        }
-    }
 }
