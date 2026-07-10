@@ -33,6 +33,7 @@ pub(crate) fn set_tray_menu(
     use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 
     let show_i = MenuItem::with_id(app, "show", "Show Window", true, None::<&str>)?;
+    let settings_i = MenuItem::with_id(app, "settings", "Settings...", true, None::<&str>)?;
     let check_update_i =
         MenuItem::with_id(app, "check_update", "Check for Updates", true, None::<&str>)?;
     let install_update_i =
@@ -42,7 +43,8 @@ pub(crate) fn set_tray_menu(
     let sep1 = PredefinedMenuItem::separator(app)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
 
-    let mut menu_items: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = vec![&show_i, &sep1];
+    let mut menu_items: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> =
+        vec![&show_i, &settings_i, &sep1];
 
     match state {
         TrayMenuState::Normal => {
@@ -71,6 +73,7 @@ pub(crate) fn set_tray_menu(
 fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // Set up initial system tray menu items (Normal state)
     let show_i = MenuItem::with_id(app, "show", "Show Window", true, None::<&str>)?;
+    let settings_i = MenuItem::with_id(app, "settings", "Settings...", true, None::<&str>)?;
     let check_update_i =
         MenuItem::with_id(app, "check_update", "Check for Updates", true, None::<&str>)?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
@@ -79,6 +82,7 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
         app,
         &[
             &show_i,
+            &settings_i,
             &PredefinedMenuItem::separator(app)?,
             &check_update_i,
             &PredefinedMenuItem::separator(app)?,
@@ -121,6 +125,12 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
             "show" => {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = set_window_visibility(&window, true);
+                }
+            }
+            "settings" => {
+                if let Some(settings_win) = app.get_webview_window("settings") {
+                    let _ = settings_win.show();
+                    let _ = settings_win.set_focus();
                 }
             }
             "check_update" => {
