@@ -75,54 +75,52 @@ function TooltipPanel() {
     return null;
   }
 
-  // Priority color mapped to text styling
-  const priorityColorMap: Record<string, string> = {
-    '0': 'bg-gray-500',
-    '1': 'bg-blue-500',
-    '2': 'bg-yellow-500',
-    '3': 'bg-orange-400',
-    '4': 'bg-orange-600',
-    '5': 'bg-red-500',
+  const getBubbleClass = (priority: string) => {
+    switch (priority) {
+      case '0':
+        return 'tooltip-bubble-not-classified';
+      case '1':
+        return 'tooltip-bubble-info';
+      case '2':
+        return 'tooltip-bubble-warning';
+      case '3':
+        return 'tooltip-bubble-average';
+      case '4':
+        return 'tooltip-bubble-high';
+      case '5':
+        return 'tooltip-bubble-disaster';
+      default:
+        return 'tooltip-bubble-default';
+    }
   };
 
-  const statusBgColor = priorityColorMap[data.details[0]?.priority] || 'bg-slate-700';
+  const statusBgColor = getBubbleClass(data.details[0]?.priority);
 
   return (
-    <div
-      className="tooltip-container flex flex-col bg-white/98 dark:bg-slate-950/98 text-slate-900 dark:text-white select-none border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden shadow-md backdrop-blur-md"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div className="tooltip-header flex items-center justify-between border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
-        <div className="flex items-center gap-2.5">
-          <span className={`w-3.5 h-3.5 rounded-full ${statusBgColor} animate-pulse`} />
-          <span className="text-sm font-extrabold tracking-wide">{data.priorityLabel}</span>
+    <div className="panel-popup" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+      <div className="tooltip-header">
+        <div className="tooltip-header-left">
+          <span className={`tooltip-status-bubble ${statusBgColor}`} />
+          <span className="tooltip-priority-label">{data.priorityLabel}</span>
         </div>
-        <span className="text-xxs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
-          {data.count} Triggers
-        </span>
+        <span className="tooltip-badge">{data.count} Triggers</span>
       </div>
 
-      <div className="tooltip-body flex-1 overflow-y-auto scrollbar-thin pr-1 flex flex-col">
+      <div className="tooltip-list">
         {data.details.map((t, i) => {
           const changeTime = t.lastchange ? new Date(parseInt(t.lastchange, 10) * 1000).toLocaleString() : 'Unknown';
 
           return (
-            <div
-              key={t.triggerid || i}
-              className="tooltip-item text-xxs bg-slate-50 dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-md transition-all duration-150 shadow-sm"
-            >
-              <div className="font-semibold text-slate-800 dark:text-slate-100 leading-snug break-words">
-                {t.description}
-              </div>
-              <div className="tooltip-item-meta flex flex-wrap text-xxs text-slate-500 dark:text-slate-400 font-medium">
+            <div key={t.triggerid || i} className="tooltip-item">
+              <div className="tooltip-title">{t.description}</div>
+              <div className="tooltip-meta">
                 {t.hostname && (
                   <div>
-                    <span className="text-slate-400 dark:text-slate-500">Host:</span> {t.hostname}
+                    <span className="tooltip-meta-label">Host:</span> {t.hostname}
                   </div>
                 )}
                 <div>
-                  <span className="text-slate-400 dark:text-slate-500">Time:</span> {changeTime}
+                  <span className="tooltip-meta-label">Time:</span> {changeTime}
                 </div>
               </div>
             </div>

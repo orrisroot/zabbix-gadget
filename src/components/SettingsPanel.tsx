@@ -1,8 +1,7 @@
-import { emit } from '@tauri-apps/api/event';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { emit, listen } from '@tauri-apps/api/event';
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import {
   AlertCircle,
-  Check,
   CheckCircle,
   ChevronDown,
   Edit2,
@@ -13,7 +12,6 @@ import {
   Settings as SettingsIcon,
   Sliders,
   Trash2,
-  Undo2,
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -32,19 +30,6 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [refreshInterval, setRefreshInterval] = useState<number>(config?.settings.refresh_interval_seconds ?? 300);
   const [isIntervalOpen, setIsIntervalOpen] = useState(false);
 
-  // Form states
-  const [formLabel, setFormLabel] = useState('');
-  const [formHost, setFormHost] = useState('');
-  const [formUser, setFormUser] = useState('');
-  const [formPass, setFormPass] = useState('');
-  const [formApiKey, setFormApiKey] = useState('');
-  const [authType, setAuthType] = useState<'userpass' | 'apikey'>('apikey');
-  const [formBasicAuthUser, setFormBasicAuthUser] = useState('');
-  const [formBasicAuthPass, setFormBasicAuthPass] = useState('');
-  const [useBasicAuth, setUseBasicAuth] = useState(false);
-
-  const [editIndex, setEditIndex] = useState<number | null>(null);
-
   // Drag and drop states
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
@@ -52,24 +37,6 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [testStatus, setTestStatus] = useState<{
     [key: string]: 'idle' | 'loading' | 'ok' | 'error';
   }>({});
-  const [formTestStatus, setFormTestStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
-  const [formErrorMessage, setFormErrorMessage] = useState<string | null>(null);
-
-  // Reset form test status when inputs change
-  useEffect(() => {
-    setFormTestStatus('idle');
-    setFormErrorMessage(null);
-  }, [
-    formLabel,
-    formHost,
-    formUser,
-    formPass,
-    formApiKey,
-    authType,
-    formBasicAuthUser,
-    formBasicAuthPass,
-    useBasicAuth,
-  ]);
 
   // Sync local states with config when it is loaded or updated in the store
   useEffect(() => {
@@ -79,95 +46,82 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     }
   }, [config]);
 
-  // Discard unsaved changes and reload config when the settings window gains focus
+  // Discard unsaved changes and reload config when the settings window becomes visible
   useEffect(() => {
-    const unlistenPromise = appWindow.onFocusChanged(({ payload: focused }) => {
-      if (focused && config) {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && config) {
         setServers(config.servers);
         setRefreshInterval(config.settings.refresh_interval_seconds);
       }
-    });
+    };
 
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
-      unlistenPromise.then((unlisten) => unlisten());
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [config]);
 
-  const resetForm = () => {
-    setFormLabel('');
-    setFormHost('');
-    setFormUser('');
-    setFormPass('');
-    setFormApiKey('');
-    setAuthType('apikey');
-    setFormBasicAuthUser('');
-    setFormBasicAuthPass('');
-    setUseBasicAuth(false);
-    setEditIndex(null);
-    setFormTestStatus('idle');
-    setFormErrorMessage(null);
-  };
+  // Listen for connection target edits/adds from the separate connection-edit window
+  useEffect(() => {
+    const listenPromise = listen<{ server: ServerConfig; editIndex: number | null }>('server-saved', (event) => {
+      const { server, editIndex } = event.payload;
+      setServers((curr) => {
+        if (editIndex !== null) {
+          const updated = [...curr];
+          updated[editIndex] = server;
+          return updated;
+        } else {
+          return [...curr, server];
+        }
+      });
+    });
 
-  const handleEdit = (idx: number) => {
-    const s = servers[idx];
-    setFormLabel(s.label);
-    setFormHost(s.host);
-    setFormUser(s.user);
-    setFormPass(s.pass);
-    setFormApiKey(s.api_key ?? '');
-    setAuthType(s.api_key ? 'apikey' : 'userpass');
-    setFormBasicAuthUser(s.basic_auth_user ?? '');
-    setFormBasicAuthPass(s.basic_auth_pass ?? '');
-    setUseBasicAuth(!!s.basic_auth_user);
-    setEditIndex(idx);
-  };
-
-  const handleAdd = () => {
-    if (!formLabel.trim() || !formHost.trim()) return;
-    const newServer: ServerConfig = {
-      label: formLabel.trim(),
-      host: formHost.trim(),
-      user: authType === 'userpass' ? formUser.trim() : '',
-      pass: authType === 'userpass' ? formPass.trim() : '',
-      ...(authType === 'apikey' ? { api_key: formApiKey.trim() } : {}),
-      ...(useBasicAuth
-        ? {
-            basic_auth_user: formBasicAuthUser.trim(),
-            basic_auth_pass: formBasicAuthPass.trim(),
-          }
-        : {}),
+    return () => {
+      listenPromise.then((unlisten) => unlisten());
     };
-    setServers([...servers, newServer]);
-    resetForm();
+  }, []);
+
+  const handleOpenAddWindow = async () => {
+    try {
+      const win = await WebviewWindow.getByLabel('connection-edit');
+      if (win) {
+        await win.show();
+        await win.setFocus();
+        setTimeout(() => {
+          emit('connection-edit-init', { editIndex: null, server: null }).catch((err) => {
+            console.error('Failed to emit connection-edit-init:', err);
+          });
+        }, 50);
+      } else {
+        console.error('Failed to find connection-edit window by label');
+      }
+    } catch (err) {
+      console.error('Failed to open connection edit window:', err);
+    }
   };
 
-  const handleUpdate = () => {
-    if (editIndex === null || !formLabel.trim() || !formHost.trim()) return;
-    const updatedServers = [...servers];
-    updatedServers[editIndex] = {
-      label: formLabel.trim(),
-      host: formHost.trim(),
-      user: authType === 'userpass' ? formUser.trim() : '',
-      pass: authType === 'userpass' ? formPass.trim() : '',
-      ...(authType === 'apikey' ? { api_key: formApiKey.trim() } : { api_key: undefined }),
-      ...(useBasicAuth
-        ? {
-            basic_auth_user: formBasicAuthUser.trim(),
-            basic_auth_pass: formBasicAuthPass.trim(),
-          }
-        : {}),
-    };
-    setServers(updatedServers);
-    resetForm();
+  const handleOpenEditWindow = async (idx: number) => {
+    try {
+      const win = await WebviewWindow.getByLabel('connection-edit');
+      if (win) {
+        await win.show();
+        await win.setFocus();
+        const s = servers[idx];
+        setTimeout(() => {
+          emit('connection-edit-init', { editIndex: idx, server: s }).catch((err) => {
+            console.error('Failed to emit connection-edit-init:', err);
+          });
+        }, 50);
+      } else {
+        console.error('Failed to find connection-edit window by label');
+      }
+    } catch (err) {
+      console.error('Failed to open connection edit window:', err);
+    }
   };
 
   const handleRemove = (idx: number) => {
     setServers(servers.filter((_, i) => i !== idx));
-    if (editIndex === idx) {
-      resetForm();
-    } else if (editIndex !== null && editIndex > idx) {
-      setEditIndex(editIndex - 1);
-    }
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -185,20 +139,6 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     updated.splice(draggedIndex, 1);
     updated.splice(index, 0, draggedItem);
     setServers(updated);
-
-    if (editIndex !== null) {
-      if (editIndex === draggedIndex) {
-        setEditIndex(index);
-      } else {
-        let newEditIndex = editIndex;
-        if (draggedIndex < editIndex && index >= editIndex) {
-          newEditIndex -= 1;
-        } else if (draggedIndex > editIndex && index <= editIndex) {
-          newEditIndex += 1;
-        }
-        setEditIndex(newEditIndex);
-      }
-    }
 
     setDraggedIndex(index);
   };
@@ -219,55 +159,23 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
         ...prev,
         [server.label]: ok ? 'ok' : 'error',
       }));
-    } catch {
+    } catch (_err) {
       setTestStatus((prev) => ({ ...prev, [server.label]: 'error' }));
     }
   };
 
-  const handleTestFormServer = async () => {
-    if (!formHost.trim()) return;
-    setFormTestStatus('loading');
-    setFormErrorMessage(null);
-    try {
-      const serverToTest: ServerConfig = {
-        label: formLabel.trim() || 'Test Connection',
-        host: formHost.trim(),
-        user: authType === 'userpass' ? formUser.trim() : '',
-        pass: authType === 'userpass' ? formPass.trim() : '',
-        ...(authType === 'apikey' ? { api_key: formApiKey.trim() } : {}),
-        ...(useBasicAuth
-          ? {
-              basic_auth_user: formBasicAuthUser.trim(),
-              basic_auth_pass: formBasicAuthPass.trim(),
-            }
-          : {}),
-      };
-      const ok = await loginServer(serverToTest);
-      if (ok) {
-        setFormTestStatus('ok');
-      } else {
-        setFormTestStatus('error');
-        setFormErrorMessage('Login failed: Invalid credentials or empty response');
-      }
-    } catch (err) {
-      setFormTestStatus('error');
-      setFormErrorMessage(err instanceof Error ? err.message : String(err));
-    }
-  };
-
   const handleSave = async () => {
-    if (!config) return;
     try {
       const newConfig = {
-        ...config,
+        ...config!,
         servers,
         settings: {
-          ...config.settings,
+          ...config!.settings,
           refresh_interval_seconds: refreshInterval,
         },
       };
+
       await saveConfig(newConfig);
-      useZabbixStore.setState({ config: newConfig });
       await emit('config-updated', newConfig);
       onClose();
     } catch (err) {
@@ -277,12 +185,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
 
   const handleMouseDown = async (e: React.MouseEvent) => {
     if (e.button !== 0) return;
-    if (
-      (e.target as HTMLElement).closest('button') ||
-      (e.target as HTMLElement).closest('input') ||
-      (e.target as HTMLElement).closest('select')
-    )
-      return;
+    if ((e.target as HTMLElement).closest('button')) return;
     e.preventDefault();
     try {
       await appWindow.startDragging();
@@ -291,144 +194,123 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     }
   };
 
+  const closeWindow = async () => {
+    try {
+      if (config) {
+        setServers(config.servers);
+        setRefreshInterval(config.settings.refresh_interval_seconds);
+      }
+      await appWindow.hide();
+      onClose();
+    } catch (err) {
+      console.error('Failed to hide settings window:', err);
+    }
+  };
+
   const intervalOptions = [
-    { value: 60, label: '1 minute' },
-    { value: 180, label: '3 minutes' },
-    { value: 300, label: '5 minutes' },
-    { value: 600, label: '10 minutes' },
-    { value: 1800, label: '30 minutes' },
+    { value: 60, label: '1 Minute' },
+    { value: 180, label: '3 Minutes' },
+    { value: 300, label: '5 Minutes' },
+    { value: 600, label: '10 Minutes' },
   ];
 
   const activeIntervalLabel =
-    intervalOptions.find((o) => o.value === refreshInterval)?.label || `${refreshInterval / 60} minutes`;
+    intervalOptions.find((opt) => opt.value === refreshInterval)?.label || `${refreshInterval} Seconds`;
 
   return (
-    <div className="flex flex-col h-full w-full text-slate-850 dark:text-slate-100 bg-slate-50 dark:bg-slate-950">
-      {/* Header */}
-      <header
-        className="settings-header app-header font-bold bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between cursor-grab select-none shadow-sm flex-shrink-0"
-        onMouseDown={handleMouseDown}
-      >
-        <div className="flex items-center gap-2 text-base text-slate-700 dark:text-slate-200 animate-fade-in">
-          <SettingsIcon size={18} className="text-indigo-450 dark:text-indigo-400" />
-          <span className="font-extrabold text-slate-900 dark:text-slate-100">Settings</span>
+    <div className="settings-panel-wrapper">
+      {/* Settings Header */}
+      <header className="panel-header settings-header" onMouseDown={handleMouseDown}>
+        <div className="panel-header-title-container">
+          <SettingsIcon className="icon-indigo" size={18} />
+          <span className="panel-header-title">Settings</span>
         </div>
-        <button
-          onClick={onClose}
-          className="settings-close-btn rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer"
-          title="Close"
-        >
-          <X size={18} />
+        <button onClick={closeWindow} className="settings-close-btn" title="Close Settings">
+          <X size={16} />
         </button>
       </header>
 
       {/* Main Content Area */}
-      <div className="settings-main flex-1 flex flex-col gap-2 bg-slate-50 dark:bg-slate-950 overflow-hidden">
+      <div className="settings-main">
         {/* Section 1: Server List */}
-        <div className="flex flex-col gap-1 flex-1 min-h-0">
-          <div className="flex items-center justify-between px-0.5 flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <ServerIcon size={14} className="text-slate-400" />
-              <span className="text-sm text-slate-800 dark:text-slate-200 font-bold tracking-wide">
-                Connection Targets ({servers.length})
-              </span>
+        <div className="settings-section flex-1 min-h-0">
+          <div className="settings-section-top">
+            <div className="flex-items-center-gap2">
+              <ServerIcon size={14} className="icon-muted" />
+              <span className="settings-section-subtitle">Connection Targets ({servers.length})</span>
             </div>
+            <button
+              onClick={handleOpenAddWindow}
+              className="btn-primary !py-1 !px-2 text-xs font-bold gap-1 cursor-pointer flex items-center shadow-none bg-indigo-600 hover:bg-indigo-500"
+              title="Add Target"
+            >
+              <Plus size={12} /> Add Target
+            </button>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto pr-1 flex flex-col gap-1 scrollbar-thin">
+          <div className="settings-server-list">
             {servers.length === 0 ? (
-              <div className="settings-empty text-center bg-slate-100/50 dark:bg-slate-900/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center h-full w-full">
-                No connection targets registered
-              </div>
+              <div className="settings-empty">No connection targets registered</div>
             ) : (
               servers.map((s, i) => {
-                const isEditingThis = editIndex === i;
                 const status = testStatus[s.label] || 'idle';
 
                 return (
                   <div
-                    key={i}
+                    key={s.label + i}
                     draggable
                     onDragStart={(e) => handleDragStart(e, i)}
                     onDragOver={(e) => handleDragOver(e, i)}
                     onDrop={handleDrop}
                     onDragEnd={handleDragEnd}
-                    className={`settings-server-item flex items-center justify-between rounded-lg border transition-all duration-200 cursor-grab active:cursor-grabbing ${
-                      isEditingThis
-                        ? 'bg-indigo-50/50 dark:bg-indigo-950/30 border-indigo-500/80 shadow-[0_0_8px_rgba(99,102,241,0.2)]'
-                        : draggedIndex === i
-                          ? 'opacity-40 bg-indigo-50/30 dark:bg-indigo-950/20 border-dashed border-indigo-400'
-                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 hover:bg-slate-100/50 dark:hover:bg-slate-900/80'
-                    }`}
+                    className={`settings-server-item ${draggedIndex === i ? 'settings-server-item-dragging' : ''}`}
                   >
-                    <div className="flex-1 min-w-0 pr-3 flex items-center gap-2">
-                      <div className="text-slate-400 dark:text-slate-650 cursor-grab hover:text-slate-600 dark:hover:text-slate-400 select-none">
+                    <div className="settings-server-item-left">
+                      <div className="settings-drag-handle">
                         <GripVertical size={14} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-extrabold text-slate-900 dark:text-white tracking-wide truncate">
-                            {s.label}
-                          </span>
-                          {isEditingThis && (
-                            <span className="settings-editing-badge text-sm bg-indigo-500/30 text-indigo-200 border border-indigo-500/40 rounded font-bold animate-pulse">
-                              Editing
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-slate-500 dark:text-slate-300 font-medium truncate mt-0.5 pl-0">
-                          {s.host.replace(/^https?:\/\//, '')}
-                        </div>
+                      <div className="flex-1-min-w-0">
+                        <div className="settings-server-name">{s.label}</div>
+                        <div className="settings-server-url">{s.host}</div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
-                      {/* Connection Test Action */}
+                    {/* Actions */}
+                    <div className="flex-items-center-gap1-5">
+                      {/* Connection Test */}
                       <button
                         onClick={() => handleTest(s)}
-                        className={`settings-action-btn rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer ${
-                          status === 'loading'
-                            ? 'text-indigo-600 dark:text-indigo-400'
-                            : status === 'ok'
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : status === 'error'
-                                ? 'text-rose-600 dark:text-rose-400'
-                                : 'text-slate-500 dark:text-slate-400'
-                        }`}
-                        title="Test Connection"
                         disabled={status === 'loading'}
+                        className="settings-action-btn"
+                        title="Test Connection"
                       >
                         {status === 'loading' ? (
-                          <RefreshCw size={15} className="animate-spin" />
+                          <RefreshCw size={13} className="icon-spin settings-action-btn-loading" />
                         ) : status === 'ok' ? (
-                          <CheckCircle size={15} />
+                          <CheckCircle size={13} className="settings-action-btn-ok" />
                         ) : status === 'error' ? (
-                          <AlertCircle size={15} />
+                          <AlertCircle size={13} className="settings-action-btn-error" />
                         ) : (
-                          <RefreshCw size={15} />
+                          <RefreshCw size={13} className="settings-action-btn-idle" />
                         )}
                       </button>
 
-                      {/* Load / Edit Action */}
+                      {/* Edit Action */}
                       <button
-                        onClick={() => handleEdit(i)}
-                        className={`settings-action-btn rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer ${
-                          isEditingThis
-                            ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10'
-                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                        }`}
-                        title="Load into Form"
+                        onClick={() => handleOpenEditWindow(i)}
+                        className="settings-action-btn settings-action-btn-edit-inactive"
+                        title="Edit"
                       >
-                        <Edit2 size={15} />
+                        <Edit2 size={13} />
                       </button>
 
                       {/* Delete Action */}
                       <button
                         onClick={() => handleRemove(i)}
-                        className="settings-action-btn rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-650 dark:hover:text-rose-455 transition-colors cursor-pointer"
+                        className="settings-action-btn settings-action-btn-danger"
                         title="Delete"
                       >
-                        <Trash2 size={15} />
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </div>
@@ -438,206 +320,24 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
           </div>
         </div>
 
-        {/* Section 2: Form */}
-        <div className="settings-form-container bg-slate-100/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg flex flex-col gap-2 shadow-inner">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-            <span className="text-sm text-indigo-600 dark:text-indigo-400 font-bold tracking-wide">
-              {editIndex !== null ? 'Edit Connection' : 'Add Connection'}
-            </span>
-            {editIndex !== null && (
-              <button
-                onClick={resetForm}
-                className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 flex items-center gap-1 cursor-pointer font-bold"
-              >
-                <Undo2 size={13} /> Cancel Edit
-              </button>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            {/* Connection Label */}
-            <input
-              placeholder="Label"
-              value={formLabel}
-              onChange={(e) => setFormLabel(e.target.value)}
-              className="settings-input w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-            />
-            {/* Host URL */}
-            <input
-              placeholder="Host (https://zabbix.example.com)"
-              value={formHost}
-              onChange={(e) => setFormHost(e.target.value)}
-              className="settings-input w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-            />
-            {/* Authentication Type Switch */}
-            <div className="flex gap-2 bg-slate-200/55 dark:bg-slate-900/55 p-0.5 rounded border border-slate-300/40 dark:border-slate-800/40">
-              <button
-                type="button"
-                onClick={() => setAuthType('apikey')}
-                className={`flex-1 text-xs py-1 rounded font-bold transition-all cursor-pointer ${
-                  authType === 'apikey'
-                    ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400 font-extrabold'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200'
-                }`}
-              >
-                API Key
-              </button>
-              <button
-                type="button"
-                onClick={() => setAuthType('userpass')}
-                className={`flex-1 text-xs py-1 rounded font-bold transition-all cursor-pointer ${
-                  authType === 'userpass'
-                    ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400 font-extrabold'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200'
-                }`}
-              >
-                User / Password
-              </button>
-            </div>
-
-            {/* User & Password or API Key Input */}
-            {authType === 'userpass' ? (
-              <div className="flex gap-2">
-                <input
-                  placeholder="User"
-                  value={formUser}
-                  onChange={(e) => setFormUser(e.target.value)}
-                  className="settings-input flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                />
-                <input
-                  placeholder="Password"
-                  type="password"
-                  value={formPass}
-                  onChange={(e) => setFormPass(e.target.value)}
-                  className="settings-input flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                />
-              </div>
-            ) : (
-              <input
-                placeholder="API Key"
-                type="password"
-                value={formApiKey}
-                onChange={(e) => setFormApiKey(e.target.value)}
-                className="settings-input w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-              />
-            )}
-            {/* Basic Auth Checkbox */}
-            <div className="flex items-center gap-2 px-1 py-0.5 mt-0.5">
-              <input
-                type="checkbox"
-                id="use-basic-auth"
-                checked={useBasicAuth}
-                onChange={(e) => setUseBasicAuth(e.target.checked)}
-                className="rounded border-slate-350 dark:border-slate-750 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-slate-950 h-3.5 w-3.5 cursor-pointer"
-              />
-              <label
-                htmlFor="use-basic-auth"
-                className="text-xs text-slate-600 dark:text-slate-400 font-semibold select-none cursor-pointer hover:text-slate-850 dark:hover:text-slate-200 transition-colors"
-              >
-                Use Basic Authentication
-              </label>
-            </div>
-            {/* Basic Auth Credentials Fields */}
-            {useBasicAuth && (
-              <div className="flex gap-2 transition-all duration-300 ease-in-out">
-                <input
-                  placeholder="Basic Auth User"
-                  value={formBasicAuthUser}
-                  onChange={(e) => setFormBasicAuthUser(e.target.value)}
-                  className="settings-input flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                />
-                <input
-                  placeholder="Basic Auth Password"
-                  type="password"
-                  value={formBasicAuthPass}
-                  onChange={(e) => setFormBasicAuthPass(e.target.value)}
-                  className="settings-input flex-1 min-w-0 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700/80 rounded text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                />
-              </div>
-            )}
-            {formErrorMessage && (
-              <div className="text-xs text-rose-600 dark:text-rose-400 font-bold px-1 py-0.5 break-all">
-                {formErrorMessage}
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-2 justify-between items-center mt-0.5">
-            {/* Form Connection Test */}
-            <button
-              onClick={handleTestFormServer}
-              disabled={!formHost.trim()}
-              className={`settings-btn-padding flex items-center gap-1.5 text-sm rounded font-bold transition-all duration-200 ${
-                !formHost.trim()
-                  ? 'opacity-40 cursor-not-allowed bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
-                  : formTestStatus === 'loading'
-                    ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-250 dark:border-indigo-500/30'
-                    : formTestStatus === 'ok'
-                      ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-250 dark:border-emerald-500/30'
-                      : formTestStatus === 'error'
-                        ? 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-250 dark:border-rose-500/30'
-                        : 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 cursor-pointer hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              {formTestStatus === 'loading' ? (
-                <>
-                  <RefreshCw size={14} className="animate-spin" /> Testing...
-                </>
-              ) : formTestStatus === 'ok' ? (
-                <>
-                  <CheckCircle size={14} /> Connection OK
-                </>
-              ) : formTestStatus === 'error' ? (
-                <>
-                  <AlertCircle size={14} /> Failed
-                </>
-              ) : (
-                <>
-                  <RefreshCw size={14} /> Test Connection
-                </>
-              )}
-            </button>
-
-            {/* Action Buttons */}
-            {editIndex !== null ? (
-              <button
-                onClick={handleUpdate}
-                disabled={!formLabel.trim() || !formHost.trim()}
-                className="settings-btn-padding flex items-center gap-1.5 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded cursor-pointer disabled:opacity-50 font-bold transition-all shadow-md shadow-indigo-600/10 active:scale-[0.98]"
-              >
-                <Check size={14} /> Update
-              </button>
-            ) : (
-              <button
-                onClick={handleAdd}
-                disabled={!formLabel.trim() || !formHost.trim()}
-                className="settings-btn-padding flex items-center gap-1.5 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded cursor-pointer disabled:opacity-50 font-bold transition-all shadow-md shadow-indigo-600/10 active:scale-[0.98]"
-              >
-                <Plus size={14} /> Add Target
-              </button>
-            )}
-          </div>
-        </div>
-
         {/* Section 3: General Settings */}
-        <div className="settings-row flex items-center justify-between bg-slate-100/30 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-900 rounded-lg flex-shrink-0 relative">
-          <div className="flex items-center gap-2">
-            <Sliders size={14} className="text-slate-400" />
-            <span className="text-sm text-slate-800 dark:text-slate-200 font-bold tracking-wide">Refresh Interval</span>
+        <div className="settings-section">
+          <div className="settings-section-top">
+            <div className="flex-items-center-gap2">
+              <Sliders size={14} className="icon-muted" />
+              <span className="settings-section-subtitle">Refresh Interval</span>
+            </div>
           </div>
-          <div className="relative">
-            <button
-              onClick={() => setIsIntervalOpen(!isIntervalOpen)}
-              className="settings-select-btn bg-white dark:bg-slate-900 border border-slate-350 dark:border-slate-700 rounded-md text-sm text-slate-800 dark:text-slate-100 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer flex items-center gap-2 min-w-[120px] justify-between"
-            >
+          <div className="settings-select-container">
+            <button onClick={() => setIsIntervalOpen(!isIntervalOpen)} className="settings-select-btn">
               <span>{activeIntervalLabel}</span>
               <ChevronDown
                 size={14}
-                className={`text-slate-400 transition-transform ${isIntervalOpen ? 'rotate-180' : ''}`}
+                className={`icon-muted transition-transform ${isIntervalOpen ? 'rotate-180' : ''}`}
               />
             </button>
             {isIntervalOpen && (
-              <div className="settings-dropdown absolute right-0 bottom-full mb-1.5 z-50 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md shadow-xl min-w-[125px] overflow-hidden">
+              <div className="settings-dropdown">
                 {intervalOptions.map((opt) => (
                   <button
                     key={opt.value}
@@ -645,10 +345,10 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                       setRefreshInterval(opt.value);
                       setIsIntervalOpen(false);
                     }}
-                    className={`settings-btn-padding w-full text-left text-sm transition-all cursor-pointer block ${
+                    className={`settings-dropdown-item ${
                       refreshInterval === opt.value
-                        ? 'bg-indigo-600 text-white font-bold'
-                        : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                        ? 'settings-dropdown-item-active'
+                        : 'settings-dropdown-item-inactive'
                     }`}
                   >
                     {opt.label}
@@ -658,15 +358,17 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
             )}
           </div>
         </div>
-
-        {/* Save & Apply Button */}
-        <button
-          onClick={handleSave}
-          className="settings-save-btn w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded text-sm font-bold cursor-pointer transition-all duration-200 shadow-lg shadow-indigo-500/15 active:scale-[0.98] border border-indigo-500/30 flex-shrink-0"
-        >
-          Save & Apply Settings
-        </button>
       </div>
+
+      {/* Settings Footer */}
+      <footer className="panel-footer">
+        <button onClick={closeWindow} className="btn-secondary">
+          Cancel
+        </button>
+        <button onClick={handleSave} className="btn-primary">
+          Save & Apply
+        </button>
+      </footer>
     </div>
   );
 }

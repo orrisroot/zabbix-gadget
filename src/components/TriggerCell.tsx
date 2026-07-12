@@ -23,17 +23,25 @@ function TriggerCell({ priority, status, isError, isLoading }: TriggerCellProps)
     bgColor: 'bg-gray-500',
   };
 
-  const getStatusClass = () => {
-    if (isError || isLoading) return 'bg-gray-550 dark:bg-gray-500';
-    if (count === 0) return 'bg-green-500';
-    return priorityInfo.bgColor;
-  };
-
-  const getCellTextColor = () => {
-    if (isError || isLoading) return 'text-slate-200 dark:text-slate-400';
-    if (count === 0) return 'text-white';
-    if (['2', '3'].includes(priority)) return 'text-slate-900';
-    return 'text-white';
+  const getCellClass = () => {
+    if (isError || isLoading) return 'trigger-cell-inactive';
+    if (count === 0) return 'trigger-cell-empty';
+    switch (priority) {
+      case '0':
+        return 'trigger-cell-not-classified';
+      case '1':
+        return 'trigger-cell-info';
+      case '2':
+        return 'trigger-cell-warning';
+      case '3':
+        return 'trigger-cell-average';
+      case '4':
+        return 'trigger-cell-high';
+      case '5':
+        return 'trigger-cell-disaster';
+      default:
+        return 'trigger-cell-inactive';
+    }
   };
 
   const updateTooltipPosition = async (e: MouseEvent) => {
@@ -107,7 +115,7 @@ function TriggerCell({ priority, status, isError, isLoading }: TriggerCellProps)
 
   return (
     <td
-      className={`text-center py-2 rounded-sm cursor-pointer font-bold transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 shadow-sm ${getStatusClass()} ${getCellTextColor()}`}
+      className={`trigger-cell ${getCellClass()}`}
       onMouseEnter={(e) => handleMouseEnter(e)}
       onMouseMove={(e) => handleMouseMove(e)}
       onMouseLeave={handleMouseLeave}

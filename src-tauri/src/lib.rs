@@ -182,7 +182,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(
             tauri_plugin_window_state::Builder::default()
-                .with_denylist(&["settings", "tooltip", "update"])
+                .with_denylist(&["settings", "tooltip", "update", "connection-edit"])
                 .build(),
         )
         .on_window_event(|window, event| {

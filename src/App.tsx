@@ -3,6 +3,7 @@ import { emit } from '@tauri-apps/api/event';
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { AlertCircle, Settings } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import ConnectionEditPanel from '@/components/ConnectionEditPanel';
 import Header from '@/components/Header';
 import SettingsPanel from '@/components/SettingsPanel';
 import TooltipPanel from '@/components/TooltipPanel';
@@ -19,6 +20,8 @@ function App() {
   const isSettingsWindow = typeof window !== 'undefined' && window.location.search.includes('window=settings');
   const isTooltipWindow = typeof window !== 'undefined' && window.location.search.includes('window=tooltip');
   const isUpdateWindow = typeof window !== 'undefined' && window.location.search.includes('window=update');
+  const isConnectionEditWindow =
+    typeof window !== 'undefined' && window.location.search.includes('window=connection-edit');
   const hasServers = config?.servers && config.servers.length > 0;
 
   const mainPosRef = useRef<PhysicalPosition | null>(null);
@@ -97,11 +100,11 @@ function App() {
         const mainHeight = mainContentEl ? mainContentEl.getBoundingClientRect().height : 120;
         const footerHeight = footerEl ? footerEl.getBoundingClientRect().height : 0;
 
-        // Sum elements + main paddings (4px top, 4px bottom) + container border (2px) + 8px safety buffer to prevent subpixel scrollbars and OS border discrepancies
-        const totalHeight = Math.ceil(headerHeight + mainHeight + footerHeight + 8 + 2 + 8);
+        // Sum elements + main paddings (4px top, 4px bottom) + container border (2px) + 1px safety buffer to prevent OS border discrepancies
+        const totalHeight = Math.ceil(headerHeight + mainHeight + footerHeight + 8 + 2 + 1);
 
-        // Cap the window height between 120px min and 550px max to prevent shrinking
-        const targetHeight = Math.max(Math.min(totalHeight, 550), 120);
+        // Cap the window height between 90px min and 550px max to prevent shrinking
+        const targetHeight = Math.max(Math.min(totalHeight, 550), 90);
 
         try {
           const appWindow = getCurrentWebviewWindow();
@@ -166,7 +169,7 @@ function App() {
 
   if (isSettingsWindow) {
     return (
-      <div className="flex flex-col h-full w-full bg-white dark:bg-slate-950 text-slate-900 dark:text-white select-none border border-slate-200 dark:border-slate-800 overflow-hidden">
+      <div className="window-base">
         <SettingsPanel
           onClose={async () => {
             try {
@@ -182,7 +185,7 @@ function App() {
 
   if (isTooltipWindow) {
     return (
-      <div className="h-full w-full bg-transparent select-none overflow-hidden flex flex-col">
+      <div className="window-transparent-wrapper">
         <TooltipPanel />
       </div>
     );
@@ -190,48 +193,40 @@ function App() {
 
   if (isUpdateWindow) {
     return (
-      <div className="h-full w-full bg-transparent select-none overflow-hidden flex flex-col">
+      <div className="window-transparent-wrapper">
         <UpdatePanel />
       </div>
     );
   }
 
+  if (isConnectionEditWindow) {
+    return (
+      <div className="window-base">
+        <ConnectionEditPanel />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-full w-full select-none app-container">
+    <div className="window-base app-container">
       <Header
         loading={loading}
         onSettingsClick={handleSettingsClick}
         theme={config?.settings.theme ?? 'dark'}
         onThemeToggle={handleThemeToggle}
       />
-      <main
-        className={`flex-1 app-main overflow-y-auto scrollbar-thin ${!hasServers ? 'flex flex-col justify-center min-h-0' : ''}`}
-      >
+      <main className={`app-main scrollbar-thin ${!hasServers ? 'app-main-empty' : ''}`}>
         {hasServers ? (
-          <table className="w-full table-fixed border-separate border-spacing-x-1.5 border-spacing-y-1.5 text-xxs">
+          <table className="trigger-table">
             <thead>
-              <tr className="text-slate-600 dark:text-gray-200">
-                <th className="text-left pb-2 px-2 w-[110px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
-                  Server
-                </th>
-                <th className="text-center pb-2 w-[70px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
-                  Disaster
-                </th>
-                <th className="text-center pb-2 w-[70px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
-                  High
-                </th>
-                <th className="text-center pb-2 w-[70px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
-                  Average
-                </th>
-                <th className="text-center pb-2 w-[70px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
-                  Warning
-                </th>
-                <th className="text-center pb-2 w-[70px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
-                  Information
-                </th>
-                <th className="text-center pb-2 w-[70px] font-semibold text-xxxs uppercase tracking-wider border-b border-slate-200 dark:border-gray-800/85">
-                  Not classified
-                </th>
+              <tr className="trigger-table-tr">
+                <th className="trigger-table-th-primary">Server</th>
+                <th className="trigger-table-th-secondary">Disaster</th>
+                <th className="trigger-table-th-secondary">High</th>
+                <th className="trigger-table-th-secondary">Average</th>
+                <th className="trigger-table-th-secondary">Warning</th>
+                <th className="trigger-table-th-secondary">Information</th>
+                <th className="trigger-table-th-secondary">Not classified</th>
               </tr>
             </thead>
             <tbody id="server-rows">
@@ -242,25 +237,22 @@ function App() {
             </tbody>
           </table>
         ) : (
-          <div className="flex flex-col items-center justify-center p-5 text-center gap-2.5 bg-gray-100/40 dark:bg-gray-900/30 border border-dashed border-slate-200 dark:border-gray-800/60 rounded-md w-full mx-auto select-none my-1">
-            <AlertCircle className="text-orange-500 w-8 h-8 animate-pulse" />
+          <div className="error-overlay">
+            <AlertCircle className="icon-error-pulse" />
             <div>
-              <h3 className="font-bold text-slate-800 dark:text-gray-200 text-xs uppercase tracking-wider">
-                Zabbix Targets Not Configured
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-gray-400 mt-1.5 leading-relaxed">
+              <h3 className="error-overlay-title">No Connection Targets</h3>
+              <p className="error-overlay-text">
                 No connection targets are registered.
                 <br />
-                Please click the Settings gear icon{' '}
-                <Settings size={13} className="inline text-indigo-450 dark:text-indigo-400 align-middle -mt-0.5" /> in
-                the header to register Zabbix servers.
+                Please click the Settings gear icon <Settings size={13} className="icon-settings-inline" /> in the
+                header to register Zabbix servers.
               </p>
             </div>
           </div>
         )}
       </main>
       {hasServers && (
-        <footer className="app-footer flex justify-between text-slate-500 dark:text-gray-300 text-xxs">
+        <footer className="app-footer">
           <span>Refresh Interval: {intervalLabel}</span>
           <span>Updated: {lastUpdate.toLocaleString()}</span>
         </footer>

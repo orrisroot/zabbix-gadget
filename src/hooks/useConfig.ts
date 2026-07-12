@@ -84,7 +84,7 @@ export function useConfig() {
     const timer = setInterval(doRefresh, interval);
 
     return () => clearInterval(timer);
-  }, [isMainWindow, isVisible, config?.settings.refresh_interval_seconds, config?.servers.length]);
+  }, [isMainWindow, isVisible, config]);
 
   return { config, serverStatuses, refreshAll, lastUpdate };
 }

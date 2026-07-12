@@ -15,11 +15,11 @@ function TriggerTable({ server, status, idx }: TriggerTableProps) {
   const isLoading = status?.loading ?? false;
 
   return (
-    <tr id={`server-${idx}`} className="server-row hover:bg-slate-200/40 dark:hover:bg-gray-800/30 transition-colors">
-      <td className="text-indigo-600 dark:text-sky-400 py-2 px-2 font-bold max-w-[120px] truncate" title={server.label}>
+    <tr id={`server-${idx}`} className="server-row">
+      <td className="trigger-table-td-primary" title={server.label}>
         <a
           href={server.host}
-          className="hover:underline cursor-pointer"
+          className="server-link"
           onClick={(e) => {
             e.preventDefault();
             open(server.host);

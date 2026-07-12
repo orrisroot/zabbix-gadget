@@ -36,23 +36,18 @@ function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps)
   };
 
   return (
-    <header
-      className="app-header w-full font-bold flex items-center justify-between cursor-grab select-none"
-      onMouseDown={handleMouseDown}
-    >
-      <div className="flex items-center gap-2">
-        <Activity size={13} className="text-orange-500" />
-        <span className="text-xs font-bold text-gray-600 dark:text-gray-300 tracking-wider uppercase">
-          System Status
-        </span>
+    <header className="app-header w-full" onMouseDown={handleMouseDown}>
+      <div className="header-title-container">
+        <Activity size={13} className="header-icon-activity" />
+        <span className="header-title">System Status</span>
       </div>
-      <div className="flex items-center gap-1">
+      <div className="header-actions-container">
         <button
           onClick={(e) => {
             e.stopPropagation();
             onThemeToggle();
           }}
-          className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+          className="btn-icon"
           title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
@@ -62,7 +57,7 @@ function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps)
             e.stopPropagation();
             onSettingsClick();
           }}
-          className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+          className="btn-icon"
           title="Settings"
         >
           <Settings size={13} />
@@ -73,17 +68,17 @@ function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps)
             refreshAll();
           }}
           disabled={loading}
-          className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
+          className="btn-icon"
           title="Refresh"
         >
-          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+          <RefreshCw size={13} className={loading ? 'icon-spin' : ''} />
         </button>
         <button
           onClick={(e) => {
             e.stopPropagation();
             handleClose();
           }}
-          className="p-1.5 rounded hover:bg-red-600 hover:text-white text-gray-550 dark:text-gray-400 transition-colors cursor-pointer"
+          className="btn-danger"
           title="Close"
         >
           <X size={13} />
