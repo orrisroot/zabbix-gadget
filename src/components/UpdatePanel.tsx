@@ -30,6 +30,7 @@ function UpdatePanel() {
     downloaded: 0,
     total: null,
   });
+  const [showDebug, setShowDebug] = useState(true);
 
   const handleMouseDown = async (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -134,44 +135,37 @@ function UpdatePanel() {
     : null;
 
   return (
-    <div
-      className="flex flex-col bg-white/98 dark:bg-slate-950/98 text-slate-900 dark:text-white select-none border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-xl backdrop-blur-md"
-      style={{
-        margin: '12px',
-        height: 'calc(100% - 24px)',
-        width: 'calc(100% - 24px)',
-      }}
-    >
-      {import.meta.env.DEV && (
-        <div className="bg-slate-900 text-[10px] p-1 flex flex-wrap gap-1 items-center justify-center border-b border-slate-800 select-none z-50 flex-shrink-0">
+    <div className="window-base">
+      {import.meta.env.DEV && showDebug && (
+        <div className="update-debug-ui">
           <span className="text-slate-400 font-bold mr-1">Debug UI:</span>
           <button
             onClick={() => {
               setStatus('checking');
             }}
-            className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 cursor-pointer font-bold border border-slate-700 hover:text-white"
+            className="update-debug-btn"
           >
             Checking
           </button>
           <button
             onClick={() => {
               setStatus('no-update');
-              setCurrentVersion('0.1.0');
+              setCurrentVersion('0.1.1');
             }}
-            className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 cursor-pointer font-bold border border-slate-700 hover:text-white"
+            className="update-debug-btn"
           >
             Up to date
           </button>
           <button
             onClick={() => {
               setStatus('available');
-              setCurrentVersion('0.1.0');
+              setCurrentVersion('0.1.1');
               setNewVersion('1.2.0');
               setChangelog(
                 '• Added new dark mode themes.\n• Fixed memory leak in tray icon render loop.\n• Improved performance on Linux MATE environment.',
               );
             }}
-            className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 cursor-pointer font-bold border border-slate-700 hover:text-white"
+            className="update-debug-btn"
           >
             Available
           </button>
@@ -180,7 +174,7 @@ function UpdatePanel() {
               setStatus('downloading');
               setDownloadProgress({ downloaded: 6500000, total: 10000000 });
             }}
-            className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 cursor-pointer font-bold border border-slate-700 hover:text-white"
+            className="update-debug-btn"
           >
             Downloading
           </button>
@@ -189,7 +183,7 @@ function UpdatePanel() {
               setStatus('relaunch-pending');
               setNewVersion('1.2.0');
             }}
-            className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 cursor-pointer font-bold border border-slate-700 hover:text-white"
+            className="update-debug-btn"
           >
             Relaunch
           </button>
@@ -198,130 +192,119 @@ function UpdatePanel() {
               setStatus('error');
               setErrorMessage('Network connection lost: Could not connect to update host.');
             }}
-            className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 cursor-pointer font-bold border border-slate-700 hover:text-white"
+            className="update-debug-btn"
           >
             Error
           </button>
         </div>
       )}
       {/* Drag Header */}
-      <header
-        className="w-full font-bold flex items-center justify-between cursor-grab select-none border-b border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/35"
-        style={{ padding: '4px 8px' }}
-        onMouseDown={handleMouseDown}
-      >
-        <div className="flex items-center gap-2 text-indigo-500 dark:text-indigo-400">
-          <Sparkles size={14} className="animate-pulse" />
-          <span className="text-xxs font-extrabold tracking-wider uppercase">Software Update</span>
+      <header className="panel-header settings-header" onMouseDown={handleMouseDown}>
+        <div
+          className={`panel-header-title-container ${import.meta.env.DEV ? 'cursor-pointer select-none' : ''}`}
+          onMouseDown={(e) => {
+            if (import.meta.env.DEV) {
+              e.stopPropagation();
+            }
+          }}
+          onClick={() => {
+            if (import.meta.env.DEV) {
+              setShowDebug(!showDebug);
+            }
+          }}
+          title={import.meta.env.DEV ? 'Click to toggle debug controls' : undefined}
+        >
+          <Sparkles size={18} className="icon-sparkles" />
+          <span className="panel-header-title">Software Update</span>
         </div>
         {status !== 'downloading' && (
-          <button
-            onClick={closeWindow}
-            className="settings-close-btn rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-            style={{ marginRight: '4px' }}
-            title="Close"
-          >
-            <X size={14} />
+          <button onClick={closeWindow} className="settings-close-btn" title="Close">
+            <X size={16} />
           </button>
         )}
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col justify-center min-h-0" style={{ padding: '16px' }}>
-        <div className="flex-1 flex flex-col justify-center gap-3">
+      <main className="panel-content panel-content-centered">
+        <div className="update-container-inner">
           {status === 'checking' && (
-            <div className="flex flex-col items-center justify-center py-4 gap-3 text-center">
-              <Loader2 className="animate-spin text-indigo-500 dark:text-indigo-400 w-9 h-9" />
+            <div className="update-status-container">
+              <Loader2 className="update-loader" />
               <div>
-                <h3 className="font-semibold text-xs text-slate-700 dark:text-slate-200">Checking for updates...</h3>
-                <p className="text-xxs text-slate-400 dark:text-slate-500 mt-1">Connecting to update server</p>
+                <h3 className="update-status-title">Checking for updates...</h3>
+                <p className="update-status-desc">Connecting to update server</p>
               </div>
             </div>
           )}
 
           {status === 'no-update' && (
-            <div className="flex flex-col items-center justify-center py-2 gap-3 text-center">
-              <CheckCircle2 className="text-emerald-500 w-9 h-9" />
+            <div className="update-status-container">
+              <CheckCircle2 className="update-success-icon" />
               <div>
-                <h3 className="font-semibold text-xs text-slate-800 dark:text-slate-100">You are up to date!</h3>
-                <p className="text-xxs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-                  Zabbix Gadget is currently at the latest version.
-                </p>
+                <h3 className="update-title-highlight">You are up to date!</h3>
+                <p className="update-desc-highlight">Zabbix Gadget is currently at the latest version.</p>
               </div>
             </div>
           )}
 
           {status === 'available' && (
             <div className="flex flex-col gap-2.5">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 dark:text-indigo-400 flex-shrink-0 mt-0.5">
+              <div className="update-available-info-container">
+                <div className="update-download-icon-container">
                   <Download size={18} />
                 </div>
-                <div className="flex-1 min-h-0">
-                  <h3 className="font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                <div className="flex-1-min-h-0">
+                  <h3 className="update-available-title">
                     Update Available
-                    <span className="text-xxxs font-extrabold px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300">
-                      v{newVersion}
-                    </span>
+                    <span className="update-badge-version">v{newVersion}</span>
                   </h3>
-                  <p className="text-xxs text-slate-500 dark:text-slate-400 mt-1">
-                    A new version is ready to install (current: v{currentVersion || '0.1.0'}).
+                  <p className="update-available-desc">
+                    A new version is ready to install (current: v{currentVersion || '0.1.1'}).
                   </p>
                 </div>
               </div>
 
               {changelog && (
-                <div
-                  className="flex-1 max-h-[85px] overflow-y-auto scrollbar-thin bg-slate-50 dark:bg-slate-900/50 rounded-md border border-slate-150 dark:border-slate-800/80 mt-1"
-                  style={{ padding: '12px' }}
-                >
-                  <h4 className="text-xxxs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <div className="update-notes-container" style={{ padding: '12px' }}>
+                  <h4 className="update-notes-title">
                     <Info size={10} /> Release Notes
                   </h4>
-                  <p className="text-xxs text-slate-600 dark:text-slate-300 leading-normal whitespace-pre-wrap">
-                    {changelog}
-                  </p>
+                  <p className="update-notes-body">{changelog}</p>
                 </div>
               )}
             </div>
           )}
 
           {status === 'downloading' && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between text-xxs">
-                <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                  <Loader2 size={12} className="animate-spin text-indigo-500" />
+            <div className="update-downloading-container">
+              <div className="update-downloading-header">
+                <span className="update-downloading-label">
+                  <Loader2 size={12} className="icon-spin text-indigo-500" />
                   Downloading update...
                 </span>
-                <span className="text-slate-400 dark:text-slate-500 font-mono">
+                <span className="update-downloading-bytes">
                   {formatBytes(downloadProgress.downloaded)}
                   {downloadProgress.total && ` / ${formatBytes(downloadProgress.total)}`}
                 </span>
               </div>
 
-              <div className="w-full h-2 bg-slate-100 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-850 rounded-full overflow-hidden">
+              <div className="update-progress-bg">
                 <div
-                  className={`h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-300 ${
-                    percent === null ? 'w-1/3 animate-pulse bg-indigo-500/80' : ''
-                  }`}
+                  className={`update-progress-fill ${percent === null ? 'update-progress-fill-indeterminate' : ''}`}
                   style={percent !== null ? { width: `${percent}%` } : undefined}
                 />
               </div>
 
-              {percent !== null && (
-                <div className="text-right text-xxxs text-indigo-500 dark:text-indigo-400 font-bold font-mono">
-                  {percent}% Completed
-                </div>
-              )}
+              {percent !== null && <div className="update-downloading-percent">{percent}% Completed</div>}
             </div>
           )}
 
           {status === 'relaunch-pending' && (
-            <div className="flex flex-col items-center justify-center py-2 gap-3 text-center">
-              <CheckCircle2 className="text-emerald-500 w-9 h-9 animate-bounce" />
+            <div className="update-status-container">
+              <CheckCircle2 className="update-relaunch-icon" />
               <div>
-                <h3 className="font-bold text-xs text-slate-800 dark:text-slate-100">Update Installed Successfully!</h3>
-                <p className="text-xxs text-slate-500 dark:text-gray-400 mt-1.5 leading-relaxed">
+                <h3 className="update-title-bold">Update Installed Successfully!</h3>
+                <p className="update-desc-highlight">
                   The software has been updated. Please click 'Relaunch' below to restart and apply the changes.
                 </p>
               </div>
@@ -329,13 +312,11 @@ function UpdatePanel() {
           )}
 
           {status === 'error' && (
-            <div className="flex flex-col items-center justify-center py-1 gap-3 text-center w-full">
-              <AlertCircle className="text-red-500 w-9 h-9" />
+            <div className="update-status-container">
+              <AlertCircle className="update-error-icon" />
               <div className="w-full">
-                <h3 className="font-bold text-xs text-red-500 dark:text-red-400">Update Failed</h3>
-                <p className="text-xxs text-rose-600 dark:text-rose-400 mt-2 leading-relaxed break-words text-center">
-                  {errorMessage}
-                </p>
+                <h3 className="update-error-title">Update Failed</h3>
+                <p className="update-error-desc">{errorMessage}</p>
               </div>
             </div>
           )}
@@ -343,40 +324,31 @@ function UpdatePanel() {
       </main>
 
       {/* Action Buttons (Footer) */}
-      <footer
-        className="w-full bg-slate-50/50 dark:bg-slate-900/35 flex items-center justify-end gap-2.5"
-        style={{ padding: '4px 8px' }}
-      >
+      <footer className="panel-footer">
         {status === 'checking' && (
-          <button
-            onClick={closeWindow}
-            className="settings-btn-padding text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-750 rounded transition-colors cursor-pointer"
-          >
+          <button onClick={closeWindow} className="btn-secondary">
+            Cancel
+          </button>
+        )}
+
+        {status === 'downloading' && (
+          <button onClick={closeWindow} className="btn-secondary">
             Cancel
           </button>
         )}
 
         {status === 'no-update' && (
-          <button
-            onClick={closeWindow}
-            className="settings-btn-padding text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors cursor-pointer"
-          >
+          <button onClick={closeWindow} className="btn-primary">
             Done
           </button>
         )}
 
         {status === 'available' && (
           <>
-            <button
-              onClick={closeWindow}
-              className="settings-btn-padding text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-750 rounded transition-colors cursor-pointer"
-            >
+            <button onClick={closeWindow} className="btn-secondary">
               Later
             </button>
-            <button
-              onClick={startInstall}
-              className="settings-btn-padding text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors cursor-pointer flex items-center gap-1.5"
-            >
+            <button onClick={startInstall} className="btn-primary">
               <Download size={12} />
               Update Now
             </button>
@@ -385,16 +357,10 @@ function UpdatePanel() {
 
         {status === 'relaunch-pending' && (
           <>
-            <button
-              onClick={closeWindow}
-              className="settings-btn-padding text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-750 rounded transition-colors cursor-pointer"
-            >
+            <button onClick={closeWindow} className="btn-secondary">
               Later
             </button>
-            <button
-              onClick={handleRelaunch}
-              className="settings-btn-padding text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded transition-colors cursor-pointer flex items-center gap-1.5"
-            >
+            <button onClick={handleRelaunch} className="btn-primary btn-primary-success">
               <RefreshCw size={12} className="animate-spin-slow" />
               Relaunch
             </button>
@@ -403,16 +369,10 @@ function UpdatePanel() {
 
         {status === 'error' && (
           <>
-            <button
-              onClick={closeWindow}
-              className="settings-btn-padding text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-750 rounded transition-colors cursor-pointer"
-            >
+            <button onClick={closeWindow} className="btn-secondary">
               Close
             </button>
-            <button
-              onClick={checkForUpdates}
-              className="settings-btn-padding text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors cursor-pointer flex items-center gap-1.5"
-            >
+            <button onClick={checkForUpdates} className="btn-primary">
               <RefreshCw size={12} />
               Retry
             </button>
