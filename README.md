@@ -4,21 +4,21 @@ A modern desktop gadget for monitoring Zabbix server triggers, built with **Taur
 
 ## Features
 
-- **Real-time trigger monitoring**: Displays active triggers by severity level
-- **Trigger deduplication**: Automatically skips redundant lower-severity triggers when a higher-severity dependent trigger is active, utilizing Zabbix's built-in dependency resolution (`skipDependent: true`)
-- **Multi-server support**: Monitor multiple Zabbix servers simultaneously
-- **Color-coded status**: 6 severity levels with distinct colors
-- **Hover tooltips**: See trigger details on hover
-- **Auto-refresh**: Configurable refresh interval (default: 5 minutes)
-- **Frameless window**: Always-on-top main gadget window with automatic position and size restoration across restarts (dialogs and tooltips are excluded from state saving to start in their default or relative positions)
-- **System Tray support**: Runs in the background, toggles window visibility, and supports checking/applying updates and relaunching directly from the tray menu
-- **Settings UI**: Configure and reorder (via drag-and-drop) servers directly in the application
-- **Lightweight**: Tauri-based, minimal resource usage
+- **Real-time trigger monitoring**: Displays active triggers classified by severity level
+- **Trigger deduplication**: Filters out redundant lower-severity triggers using Zabbix dependencies (`skipDependent: true`)
+- **Multi-server support**: Monitors multiple Zabbix servers simultaneously
+- **Color-coded status**: Distinguishes 6 severity levels with distinct status colors
+- **Hover tooltips**: Shows detailed trigger information on hover
+- **Auto-refresh**: Automatically updates triggers at a configurable interval (default: 5 minutes)
+- **Frameless window**: Provides an always-on-top window with state restoration for position and size
+- **System Tray support**: Runs in the background with tray menu actions for updates and visibility
+- **Settings UI**: Offers interactive configuration including drag-and-drop server reordering
+- **Lightweight footprint**: Runs with minimal resource usage powered by Tauri v2
 
 ## Prerequisites
 
-- Node.js 18+
-- Rust 1.70+
+- Node.js 22+ (Active LTS)
+- Rust 1.77.2+ (stable)
 - System dependencies for Tauri (see [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/))
 
 ## Installation
@@ -79,53 +79,9 @@ See [config/zabbix.toml.example](config/zabbix.toml.example) for a template.
 
 ## Project Structure
 
-```
-zabbix-gadget/
-├── package.json
-├── package-lock.json
-├── index.html
-├── vite.config.ts
-├── tsconfig.json
-├── tsconfig.node.json
-├── biome.json
-├── .gitignore
-├── README.md
-├── AGENTS.md
-├── src/                          # React + TypeScript (Vite)
-│   ├── main.tsx
-│   ├── App.tsx
-│   ├── index.css
-│   ├── components/
-│   │   ├── Header.tsx
-│   │   ├── SettingsPanel.tsx
-│   │   ├── TooltipPanel.tsx
-│   │   ├── TriggerCell.tsx
-│   │   ├── TriggerTable.tsx
-│   │   └── UpdatePanel.tsx
-│   ├── hooks/
-│   │   ├── useZabbix.ts
-│   │   └── useConfig.ts
-│   ├── types/
-│   │   ├── zabbix.ts
-│   │   └── config.ts
-│   └── lib/
-│       └── zabbix-api.ts
-├── src-tauri/                    # Rust + Tauri
-│   ├── Cargo.toml
-│   ├── Cargo.lock
-│   ├── build.rs
-│   ├── tauri.conf.json
-│   ├── icons/
-│   │   └── icon.png
-│   └── src/
-│       ├── main.rs
-│       ├── lib.rs
-│       ├── config.rs             # TOML configuration handling
-│       ├── zabbix.rs             # Zabbix JSON-RPC client
-│       └── commands.rs           # Tauri Commands
-└── config/
-    └── zabbix.toml.example
-```
+- `src/`: Frontend React + TypeScript application.
+- `src-tauri/`: Backend Rust + Tauri v2 core logic and commands.
+- `config/`: Setup configuration templates.
 
 ## Development
 
@@ -143,15 +99,65 @@ npx vite build
 cd src-tauri && cargo check
 ```
 
-### Troubleshooting Linux AppImage Build
+## Building Release Artifacts
 
-If bundling the AppImage fails on Linux (e.g., due to FUSE errors or `Unable to recognise the format` / `.relr.dyn` section errors in `linuxdeploy`), set the following environment variables before building:
+There are two ways to build release artifacts, depending on whether you want to package the installer or simply build the standalone executable.
+
+### 1. Build Standalone Executable Only (No Code Signing Required)
+
+If you do not need to generate installer bundles (like `.deb`, `.appimage`, `.msi`, `.dmg`) and just want the compiled standalone executable, you can skip the bundling step. This does **not** require any update signing keys.
+
+Run the build command with the `--no-bundle` flag:
 
 ```bash
-export APPIMAGE_EXTRACT_AND_RUN=1
-export NO_STRIP=true
-npm run tauri build
+npm run tauri build -- --no-bundle
 ```
+
+The compiled execution binary will be generated at:
+- **Linux / macOS**: `src-tauri/target/release/zabbix-gadget`
+- **Windows**: `src-tauri/target/release/zabbix-gadget.exe`
+
+### 2. Build and Package Installers (Code Signing Required)
+
+Because this application uses the Tauri auto-update plugin (`tauri-plugin-updater`) and defines a verification public key (`pubkey`) in `tauri.conf.json`, you cannot package installer bundles without the corresponding signing private key.
+
+#### Prerequisites for Packaging
+
+To compile and package the installer bundles locally, you must set the following environment variables:
+
+- `TAURI_SIGNING_PRIVATE_KEY`: The content of your private key (Minisign key) matching the public key in `tauri.conf.json`.
+- `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: (Optional) The passphrase used to decrypt the private key.
+
+If these environment variables are missing or incorrect, the updater plugin will fail to sign the update bundle, causing the `tauri build` process to abort with an error.
+
+#### How to Build
+
+1. Configure the environment variables:
+   - **Linux/macOS**:
+     ```bash
+     export TAURI_SIGNING_PRIVATE_KEY="your-private-key-content"
+     export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="your-passphrase"
+     ```
+   - **Windows (PowerShell)**:
+     ```powershell
+     $env:TAURI_SIGNING_PRIVATE_KEY="your-private-key-content"
+     $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD="your-passphrase"
+     ```
+2. Run the build command:
+   ```bash
+   npm run tauri build
+   ```
+
+#### Custom Build/Fork Configuration (Generating New Keys)
+
+If you are compiling your own fork and want to generate new signing keys:
+1. Generate a new key pair using the Tauri CLI:
+   ```bash
+   npx tauri signer generate
+   ```
+2. Update the public key `pubkey` field in `src-tauri/tauri.conf.json` under `plugins.updater`.
+3. Use the newly generated private key and passphrase as the `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` variables when building.
+
 
 ## License
 
