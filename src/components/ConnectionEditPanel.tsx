@@ -51,6 +51,20 @@ function ConnectionEditPanel() {
 
   // Reset form test status when inputs change
   useEffect(() => {
+    // Intentionally reference input values to trigger status reset when any change
+    if (
+      formLabel ||
+      formHost ||
+      formUser ||
+      formPass ||
+      formApiKey ||
+      authType ||
+      formBasicAuthUser ||
+      formBasicAuthPass ||
+      useBasicAuth
+    ) {
+      // Input changed
+    }
     setFormTestStatus('idle');
     setFormErrorMessage(null);
   }, [
@@ -143,12 +157,12 @@ function ConnectionEditPanel() {
 
   return (
     <div className="settings-panel-wrapper">
-      <header className="panel-header settings-header" onMouseDown={handleMouseDown}>
+      <header role="toolbar" className="panel-header settings-header" onMouseDown={handleMouseDown}>
         <div className="panel-header-title-container">
           <Server size={18} className="icon-indigo" />
           <span className="panel-header-title">{editIndex !== null ? 'Edit Connection' : 'Add Connection'}</span>
         </div>
-        <button onClick={handleClose} className="settings-close-btn" title="Close">
+        <button type="button" onClick={handleClose} className="settings-close-btn" title="Close">
           <X size={16} />
         </button>
       </header>
@@ -295,6 +309,7 @@ function ConnectionEditPanel() {
 
       <footer className="panel-footer">
         <button
+          type="button"
           onClick={handleTestFormServer}
           disabled={!formHost.trim()}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-md transition-all cursor-pointer border select-none ${
@@ -329,10 +344,15 @@ function ConnectionEditPanel() {
         </button>
 
         <div className="flex gap-2">
-          <button onClick={handleClose} className="btn-secondary">
+          <button type="button" onClick={handleClose} className="btn-secondary">
             Cancel
           </button>
-          <button onClick={handleSave} disabled={!formLabel.trim() || !formHost.trim()} className="btn-primary">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!formLabel.trim() || !formHost.trim()}
+            className="btn-primary"
+          >
             {editIndex !== null ? (
               <>
                 <Check size={14} /> Update

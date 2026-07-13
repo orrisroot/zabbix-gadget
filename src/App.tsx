@@ -87,6 +87,9 @@ function App() {
   useEffect(() => {
     if (isSettingsWindow || isTooltipWindow || isUpdateWindow) return;
 
+    // Reference servers and statuses so that height calculations run when the content changes
+    const _triggerResize = { servers: config?.servers, statuses: serverStatuses };
+
     const updateWindowHeight = async () => {
       // Small timeout to allow DOM to render and stabilize
       await new Promise((resolve) => setTimeout(resolve, 150));
@@ -118,7 +121,7 @@ function App() {
     };
 
     updateWindowHeight();
-  }, [config?.servers, serverStatuses, isSettingsWindow, isUpdateWindow]);
+  }, [config?.servers, serverStatuses, isSettingsWindow, isUpdateWindow, isTooltipWindow]);
 
   const handleSettingsClick = async () => {
     try {

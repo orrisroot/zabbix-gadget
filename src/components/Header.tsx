@@ -36,13 +36,14 @@ function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps)
   };
 
   return (
-    <header className="app-header w-full" onMouseDown={handleMouseDown}>
+    <header role="toolbar" className="app-header w-full" onMouseDown={handleMouseDown}>
       <div className="header-title-container">
         <Activity size={13} className="header-icon-activity" />
         <span className="header-title">System Status</span>
       </div>
       <div className="header-actions-container">
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             onThemeToggle();
@@ -53,6 +54,7 @@ function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps)
           {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
         </button>
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             onSettingsClick();
@@ -63,6 +65,7 @@ function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps)
           <Settings size={13} />
         </button>
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             refreshAll();
@@ -74,6 +77,7 @@ function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps)
           <RefreshCw size={13} className={loading ? 'icon-spin' : ''} />
         </button>
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             handleClose();

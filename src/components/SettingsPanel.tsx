@@ -165,12 +165,13 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
   };
 
   const handleSave = async () => {
+    if (!config) return;
     try {
       const newConfig = {
-        ...config!,
+        ...config,
         servers,
         settings: {
-          ...config!.settings,
+          ...config.settings,
           refresh_interval_seconds: refreshInterval,
         },
       };
@@ -220,12 +221,12 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
   return (
     <div className="settings-panel-wrapper">
       {/* Settings Header */}
-      <header className="panel-header settings-header" onMouseDown={handleMouseDown}>
+      <header role="toolbar" className="panel-header settings-header" onMouseDown={handleMouseDown}>
         <div className="panel-header-title-container">
           <SettingsIcon className="icon-indigo" size={18} />
           <span className="panel-header-title">Settings</span>
         </div>
-        <button onClick={closeWindow} className="settings-close-btn" title="Close Settings">
+        <button type="button" onClick={closeWindow} className="settings-close-btn" title="Close Settings">
           <X size={16} />
         </button>
       </header>
@@ -240,6 +241,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
               <span className="settings-section-subtitle">Connection Targets ({servers.length})</span>
             </div>
             <button
+              type="button"
               onClick={handleOpenAddWindow}
               className="btn-primary !py-1 !px-2 text-xs font-bold gap-1 cursor-pointer flex items-center shadow-none bg-indigo-600 hover:bg-indigo-500"
               title="Add Target"
@@ -248,7 +250,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
             </button>
           </div>
 
-          <div className="settings-server-list">
+          <ul className="settings-server-list">
             {servers.length === 0 ? (
               <div className="settings-empty">No connection targets registered</div>
             ) : (
@@ -256,8 +258,8 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                 const status = testStatus[s.label] || 'idle';
 
                 return (
-                  <div
-                    key={s.label + i}
+                  <li
+                    key={s.label}
                     draggable
                     onDragStart={(e) => handleDragStart(e, i)}
                     onDragOver={(e) => handleDragOver(e, i)}
@@ -279,6 +281,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                     <div className="flex-items-center-gap1-5">
                       {/* Connection Test */}
                       <button
+                        type="button"
                         onClick={() => handleTest(s)}
                         disabled={status === 'loading'}
                         className="settings-action-btn"
@@ -297,6 +300,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
 
                       {/* Edit Action */}
                       <button
+                        type="button"
                         onClick={() => handleOpenEditWindow(i)}
                         className="settings-action-btn settings-action-btn-edit-inactive"
                         title="Edit"
@@ -306,6 +310,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
 
                       {/* Delete Action */}
                       <button
+                        type="button"
                         onClick={() => handleRemove(i)}
                         className="settings-action-btn settings-action-btn-danger"
                         title="Delete"
@@ -313,11 +318,11 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
                         <Trash2 size={13} />
                       </button>
                     </div>
-                  </div>
+                  </li>
                 );
               })
             )}
-          </div>
+          </ul>
         </div>
 
         {/* Section 3: General Settings */}
@@ -329,7 +334,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
             </div>
           </div>
           <div className="settings-select-container">
-            <button onClick={() => setIsIntervalOpen(!isIntervalOpen)} className="settings-select-btn">
+            <button type="button" onClick={() => setIsIntervalOpen(!isIntervalOpen)} className="settings-select-btn">
               <span>{activeIntervalLabel}</span>
               <ChevronDown
                 size={14}
@@ -340,6 +345,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
               <div className="settings-dropdown">
                 {intervalOptions.map((opt) => (
                   <button
+                    type="button"
                     key={opt.value}
                     onClick={() => {
                       setRefreshInterval(opt.value);
@@ -362,10 +368,10 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
 
       {/* Settings Footer */}
       <footer className="panel-footer">
-        <button onClick={closeWindow} className="btn-secondary">
+        <button type="button" onClick={closeWindow} className="btn-secondary">
           Cancel
         </button>
-        <button onClick={handleSave} className="btn-primary">
+        <button type="button" onClick={handleSave} className="btn-primary">
           Save & Apply
         </button>
       </footer>

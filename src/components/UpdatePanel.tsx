@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { AlertCircle, CheckCircle2, Download, Info, Loader2, RefreshCw, Sparkles, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 type UpdateStatus = 'checking' | 'available' | 'no-update' | 'downloading' | 'relaunch-pending' | 'error';
 
@@ -51,7 +51,7 @@ function UpdatePanel() {
     }
   };
 
-  const checkForUpdates = async () => {
+  const checkForUpdates = useCallback(async () => {
     setStatus('checking');
     setErrorMessage('');
     setDownloadProgress({ downloaded: 0, total: null });
@@ -73,7 +73,7 @@ function UpdatePanel() {
       setStatus('error');
       setErrorMessage(String(err));
     }
-  };
+  }, []);
 
   const startInstall = async () => {
     setStatus('downloading');
@@ -118,7 +118,7 @@ function UpdatePanel() {
       unlistenTrigger.then((unlisten) => unlisten());
       unlistenProgress.then((unlisten) => unlisten());
     };
-  }, []);
+  }, [checkForUpdates]);
 
   // Format bytes to a human readable format
   const formatBytes = (bytes: number) => {
@@ -140,6 +140,7 @@ function UpdatePanel() {
         <div className="update-debug-ui">
           <span className="text-slate-400 font-bold mr-1">Debug UI:</span>
           <button
+            type="button"
             onClick={() => {
               setStatus('checking');
             }}
@@ -148,6 +149,7 @@ function UpdatePanel() {
             Checking
           </button>
           <button
+            type="button"
             onClick={() => {
               setStatus('no-update');
               setCurrentVersion('0.1.1');
@@ -157,6 +159,7 @@ function UpdatePanel() {
             Up to date
           </button>
           <button
+            type="button"
             onClick={() => {
               setStatus('available');
               setCurrentVersion('0.1.1');
@@ -170,6 +173,7 @@ function UpdatePanel() {
             Available
           </button>
           <button
+            type="button"
             onClick={() => {
               setStatus('downloading');
               setDownloadProgress({ downloaded: 6500000, total: 10000000 });
@@ -179,6 +183,7 @@ function UpdatePanel() {
             Downloading
           </button>
           <button
+            type="button"
             onClick={() => {
               setStatus('relaunch-pending');
               setNewVersion('1.2.0');
@@ -188,6 +193,7 @@ function UpdatePanel() {
             Relaunch
           </button>
           <button
+            type="button"
             onClick={() => {
               setStatus('error');
               setErrorMessage('Network connection lost: Could not connect to update host.');
@@ -199,9 +205,10 @@ function UpdatePanel() {
         </div>
       )}
       {/* Drag Header */}
-      <header className="panel-header settings-header" onMouseDown={handleMouseDown}>
-        <div
-          className={`panel-header-title-container ${import.meta.env.DEV ? 'cursor-pointer select-none' : ''}`}
+      <header role="toolbar" className="panel-header settings-header" onMouseDown={handleMouseDown}>
+        <button
+          type="button"
+          className={`panel-header-title-container ${import.meta.env.DEV ? 'cursor-pointer select-none' : ''} bg-transparent border-none p-0 outline-none text-left`}
           onMouseDown={(e) => {
             if (import.meta.env.DEV) {
               e.stopPropagation();
@@ -216,9 +223,9 @@ function UpdatePanel() {
         >
           <Sparkles size={18} className="icon-sparkles" />
           <span className="panel-header-title">Software Update</span>
-        </div>
+        </button>
         {status !== 'downloading' && (
-          <button onClick={closeWindow} className="settings-close-btn" title="Close">
+          <button type="button" onClick={closeWindow} className="settings-close-btn" title="Close">
             <X size={16} />
           </button>
         )}
@@ -326,29 +333,29 @@ function UpdatePanel() {
       {/* Action Buttons (Footer) */}
       <footer className="panel-footer">
         {status === 'checking' && (
-          <button onClick={closeWindow} className="btn-secondary">
+          <button type="button" onClick={closeWindow} className="btn-secondary">
             Cancel
           </button>
         )}
 
         {status === 'downloading' && (
-          <button onClick={closeWindow} className="btn-secondary">
+          <button type="button" onClick={closeWindow} className="btn-secondary">
             Cancel
           </button>
         )}
 
         {status === 'no-update' && (
-          <button onClick={closeWindow} className="btn-primary">
+          <button type="button" onClick={closeWindow} className="btn-primary">
             Done
           </button>
         )}
 
         {status === 'available' && (
           <>
-            <button onClick={closeWindow} className="btn-secondary">
+            <button type="button" onClick={closeWindow} className="btn-secondary">
               Later
             </button>
-            <button onClick={startInstall} className="btn-primary">
+            <button type="button" onClick={startInstall} className="btn-primary">
               <Download size={12} />
               Update Now
             </button>
@@ -357,10 +364,10 @@ function UpdatePanel() {
 
         {status === 'relaunch-pending' && (
           <>
-            <button onClick={closeWindow} className="btn-secondary">
+            <button type="button" onClick={closeWindow} className="btn-secondary">
               Later
             </button>
-            <button onClick={handleRelaunch} className="btn-primary btn-primary-success">
+            <button type="button" onClick={handleRelaunch} className="btn-primary btn-primary-success">
               <RefreshCw size={12} className="animate-spin-slow" />
               Relaunch
             </button>
@@ -369,10 +376,10 @@ function UpdatePanel() {
 
         {status === 'error' && (
           <>
-            <button onClick={closeWindow} className="btn-secondary">
+            <button type="button" onClick={closeWindow} className="btn-secondary">
               Close
             </button>
-            <button onClick={checkForUpdates} className="btn-primary">
+            <button type="button" onClick={checkForUpdates} className="btn-primary">
               <RefreshCw size={12} />
               Retry
             </button>

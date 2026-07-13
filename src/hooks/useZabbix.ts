@@ -59,10 +59,12 @@ export const useZabbixStore = create<ZabbixStore>((set, get) => ({
           const count = triggers.get(t.priority) || 0;
           triggers.set(t.priority, count + 1);
 
-          if (!triggerDetails.has(t.priority)) {
-            triggerDetails.set(t.priority, []);
+          let list = triggerDetails.get(t.priority);
+          if (!list) {
+            list = [];
+            triggerDetails.set(t.priority, list);
           }
-          triggerDetails.get(t.priority)!.push(t);
+          list.push(t);
         });
       }
 

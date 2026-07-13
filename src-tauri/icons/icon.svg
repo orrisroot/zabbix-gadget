@@ -1,4 +1,5 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <title>Zabbix Gadget Icon</title>
   <defs>
     <!-- Sophisticated background gradient: from vibrant neon-red to deep dark cherry -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">

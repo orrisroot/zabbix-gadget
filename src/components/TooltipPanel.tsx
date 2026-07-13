@@ -1,6 +1,6 @@
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ZabbixTrigger } from '@/types/zabbix';
 
 interface TooltipData {
@@ -16,25 +16,28 @@ function TooltipPanel() {
   const [data, setData] = useState<TooltipData | null>(null);
   const hideTimeoutRef = useRef<number | null>(null);
 
-  const clearHideTimeout = () => {
+  const clearHideTimeout = useCallback(() => {
     if (hideTimeoutRef.current) {
       clearTimeout(hideTimeoutRef.current);
       hideTimeoutRef.current = null;
     }
-  };
+  }, []);
 
-  const scheduleHide = (delay = 200) => {
-    clearHideTimeout();
-    hideTimeoutRef.current = window.setTimeout(async () => {
-      try {
-        const appWin = getCurrentWebviewWindow();
-        await appWin.hide();
-        setData(null); // Clear data to unmount pulse animations
-      } catch (err) {
-        console.error('Failed to hide tooltip window:', err);
-      }
-    }, delay);
-  };
+  const scheduleHide = useCallback(
+    (delay = 200) => {
+      clearHideTimeout();
+      hideTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const appWin = getCurrentWebviewWindow();
+          await appWin.hide();
+          setData(null); // Clear data to unmount pulse animations
+        } catch (err) {
+          console.error('Failed to hide tooltip window:', err);
+        }
+      }, delay);
+    },
+    [clearHideTimeout],
+  );
 
   useEffect(() => {
     // Listen for updating the tooltip content
@@ -59,7 +62,7 @@ function TooltipPanel() {
       unlistenCancelHide.then((unlisten) => unlisten());
       clearHideTimeout();
     };
-  }, []);
+  }, [clearHideTimeout, scheduleHide]);
 
   const handleMouseEnter = () => {
     // Keep showing tooltip when mouse enters the tooltip window
@@ -97,7 +100,7 @@ function TooltipPanel() {
   const statusBgColor = getBubbleClass(data.details[0]?.priority);
 
   return (
-    <div className="panel-popup" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div role="tooltip" className="panel-popup" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <div className="tooltip-header">
         <div className="tooltip-header-left">
           <span className={`tooltip-status-bubble ${statusBgColor}`} />
