@@ -36,7 +36,7 @@ npm run tauri build
 
 ## Configuration
 
-Create a configuration file at the following path depending on your operating system:
+The configuration can be modified directly within the application using the **Settings UI** (accessible via the gear icon in the header or the system tray menu). Alternatively, you can configure it manually by creating or editing a configuration file at the following path depending on your operating system:
 
 - **Linux**: `~/.config/zabbix-gadget/zabbix.toml`
 - **macOS**: `~/Library/Application Support/zabbix-gadget/zabbix.toml`
