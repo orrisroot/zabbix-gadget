@@ -1,37 +1,33 @@
-import { open } from '@tauri-apps/plugin-shell';
-import TriggerCell from '@/components/TriggerCell';
+import TriggerRow from '@/components/TriggerRow';
 import type { ServerStatus } from '@/hooks/useZabbix';
 import type { ServerConfig } from '@/types/config';
-import { PRIORITY_ORDER } from '@/types/zabbix';
 
 interface TriggerTableProps {
-  server: ServerConfig;
-  status: ServerStatus | null;
-  idx: number;
+  servers: ServerConfig[];
+  serverStatuses: Map<string, ServerStatus>;
 }
 
-function TriggerTable({ server, status, idx }: TriggerTableProps) {
-  const isError = !status || status.error !== null;
-  const isLoading = status?.loading ?? false;
-
+export function TriggerTable({ servers, serverStatuses }: TriggerTableProps) {
   return (
-    <tr id={`server-${idx}`} className="server-row">
-      <td className="trigger-table-td-primary" title={server.label}>
-        <a
-          href={server.host}
-          className="server-link"
-          onClick={(e) => {
-            e.preventDefault();
-            open(server.host);
-          }}
-        >
-          {server.label}
-        </a>
-      </td>
-      {PRIORITY_ORDER.map((priority) => (
-        <TriggerCell key={priority} priority={priority} status={status} isError={isError} isLoading={isLoading} />
-      ))}
-    </tr>
+    <table className="trigger-table">
+      <thead>
+        <tr className="trigger-table-tr">
+          <th className="trigger-table-th-primary">Server</th>
+          <th className="trigger-table-th-secondary">Disaster</th>
+          <th className="trigger-table-th-secondary">High</th>
+          <th className="trigger-table-th-secondary">Average</th>
+          <th className="trigger-table-th-secondary">Warning</th>
+          <th className="trigger-table-th-secondary">Information</th>
+          <th className="trigger-table-th-secondary">Not classified</th>
+        </tr>
+      </thead>
+      <tbody id="server-rows">
+        {servers.map((server, idx) => {
+          const status = serverStatuses.get(server.label);
+          return <TriggerRow key={server.label} server={server} status={status ?? null} idx={idx} />;
+        })}
+      </tbody>
+    </table>
   );
 }
 

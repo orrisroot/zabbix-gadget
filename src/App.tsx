@@ -219,26 +219,8 @@ function App() {
         onThemeToggle={handleThemeToggle}
       />
       <main className={`app-main scrollbar-thin ${!hasServers ? 'app-main-empty' : ''}`}>
-        {hasServers ? (
-          <table className="trigger-table">
-            <thead>
-              <tr className="trigger-table-tr">
-                <th className="trigger-table-th-primary">Server</th>
-                <th className="trigger-table-th-secondary">Disaster</th>
-                <th className="trigger-table-th-secondary">High</th>
-                <th className="trigger-table-th-secondary">Average</th>
-                <th className="trigger-table-th-secondary">Warning</th>
-                <th className="trigger-table-th-secondary">Information</th>
-                <th className="trigger-table-th-secondary">Not classified</th>
-              </tr>
-            </thead>
-            <tbody id="server-rows">
-              {config?.servers.map((server, idx) => {
-                const status = serverStatuses.get(server.label);
-                return <TriggerTable key={server.label} server={server} status={status ?? null} idx={idx} />;
-              })}
-            </tbody>
-          </table>
+        {hasServers && config?.servers ? (
+          <TriggerTable servers={config.servers} serverStatuses={serverStatuses} />
         ) : (
           <div className="error-overlay">
             <AlertCircle className="icon-error-pulse" />

@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { Activity, Moon, RefreshCw, Settings, Sun, X } from 'lucide-react';
+import { useTauriWindow } from '@/hooks/useTauriWindow';
 import { useZabbixStore } from '@/hooks/useZabbix';
 
 interface HeaderProps {
@@ -12,26 +12,14 @@ interface HeaderProps {
 
 function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps) {
   const { refreshAll } = useZabbixStore();
-  const appWindow = getCurrentWebviewWindow();
-
-  const handleMouseDown = async (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
-    // Do not drag on buttons
-    if ((e.target as HTMLElement).closest('button')) return;
-    e.preventDefault();
-    try {
-      await appWindow.startDragging();
-    } catch (err) {
-      console.error('Drag failed:', err);
-    }
-  };
+  const { handleMouseDown, closeWindow } = useTauriWindow();
 
   const handleClose = async () => {
     try {
       await invoke('close_app');
     } catch (err) {
       console.error('Failed to close app:', err);
-      appWindow.close();
+      closeWindow();
     }
   };
 

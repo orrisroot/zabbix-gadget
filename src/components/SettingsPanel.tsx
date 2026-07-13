@@ -1,20 +1,10 @@
 import { emit, listen } from '@tauri-apps/api/event';
-import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
-import {
-  AlertCircle,
-  CheckCircle,
-  ChevronDown,
-  Edit2,
-  GripVertical,
-  Plus,
-  RefreshCw,
-  Server as ServerIcon,
-  Settings as SettingsIcon,
-  Sliders,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { ChevronDown, Plus, Server as ServerIcon, Settings as SettingsIcon, Sliders } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import PanelHeader from '@/components/PanelHeader';
+import SettingsServerItem from '@/components/SettingsServerItem';
+import { useTauriWindow } from '@/hooks/useTauriWindow';
 import { useZabbixStore } from '@/hooks/useZabbix';
 import { loginServer, saveConfig } from '@/lib/zabbix-api';
 import type { ServerConfig } from '@/types/config';
@@ -24,7 +14,7 @@ interface SettingsPanelProps {
 }
 
 function SettingsPanel({ onClose }: SettingsPanelProps) {
-  const appWindow = getCurrentWebviewWindow();
+  const { hideWindow } = useTauriWindow();
   const { config } = useZabbixStore();
   const [servers, setServers] = useState<ServerConfig[]>(config?.servers ?? []);
   const [refreshInterval, setRefreshInterval] = useState<number>(config?.settings.refresh_interval_seconds ?? 300);
@@ -70,9 +60,8 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
           const updated = [...curr];
           updated[editIndex] = server;
           return updated;
-        } else {
-          return [...curr, server];
         }
+        return [...curr, server];
       });
     });
 
@@ -124,10 +113,8 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     setServers(servers.filter((_, i) => i !== idx));
   };
 
-  const handleDragStart = (e: React.DragEvent, index: number) => {
+  const handleDragStart = (_e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', index.toString());
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -184,24 +171,13 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     }
   };
 
-  const handleMouseDown = async (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
-    if ((e.target as HTMLElement).closest('button')) return;
-    e.preventDefault();
-    try {
-      await appWindow.startDragging();
-    } catch (err) {
-      console.error('Drag failed:', err);
-    }
-  };
-
   const closeWindow = async () => {
     try {
       if (config) {
         setServers(config.servers);
         setRefreshInterval(config.settings.refresh_interval_seconds);
       }
-      await appWindow.hide();
+      await hideWindow();
       onClose();
     } catch (err) {
       console.error('Failed to hide settings window:', err);
@@ -220,18 +196,8 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
 
   return (
     <div className="settings-panel-wrapper">
-      {/* Settings Header */}
-      <header role="toolbar" className="panel-header settings-header" onMouseDown={handleMouseDown}>
-        <div className="panel-header-title-container">
-          <SettingsIcon className="icon-indigo" size={18} />
-          <span className="panel-header-title">Settings</span>
-        </div>
-        <button type="button" onClick={closeWindow} className="settings-close-btn" title="Close Settings">
-          <X size={16} />
-        </button>
-      </header>
+      <PanelHeader title="Settings" icon={<SettingsIcon className="icon-indigo" size={18} />} onClose={closeWindow} />
 
-      {/* Main Content Area */}
       <div className="settings-main">
         {/* Section 1: Server List */}
         <div className="settings-section flex-1 min-h-0">
@@ -254,73 +220,22 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
             {servers.length === 0 ? (
               <div className="settings-empty">No connection targets registered</div>
             ) : (
-              servers.map((s, i) => {
-                const status = testStatus[s.label] || 'idle';
-
-                return (
-                  <li
-                    key={s.label}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, i)}
-                    onDragOver={(e) => handleDragOver(e, i)}
-                    onDrop={handleDrop}
-                    onDragEnd={handleDragEnd}
-                    className={`settings-server-item ${draggedIndex === i ? 'settings-server-item-dragging' : ''}`}
-                  >
-                    <div className="settings-server-item-left">
-                      <div className="settings-drag-handle">
-                        <GripVertical size={14} />
-                      </div>
-                      <div className="flex-1-min-w-0">
-                        <div className="settings-server-name">{s.label}</div>
-                        <div className="settings-server-url">{s.host}</div>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex-items-center-gap1-5">
-                      {/* Connection Test */}
-                      <button
-                        type="button"
-                        onClick={() => handleTest(s)}
-                        disabled={status === 'loading'}
-                        className="settings-action-btn"
-                        title="Test Connection"
-                      >
-                        {status === 'loading' ? (
-                          <RefreshCw size={13} className="icon-spin settings-action-btn-loading" />
-                        ) : status === 'ok' ? (
-                          <CheckCircle size={13} className="settings-action-btn-ok" />
-                        ) : status === 'error' ? (
-                          <AlertCircle size={13} className="settings-action-btn-error" />
-                        ) : (
-                          <RefreshCw size={13} className="settings-action-btn-idle" />
-                        )}
-                      </button>
-
-                      {/* Edit Action */}
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEditWindow(i)}
-                        className="settings-action-btn settings-action-btn-edit-inactive"
-                        title="Edit"
-                      >
-                        <Edit2 size={13} />
-                      </button>
-
-                      {/* Delete Action */}
-                      <button
-                        type="button"
-                        onClick={() => handleRemove(i)}
-                        className="settings-action-btn settings-action-btn-danger"
-                        title="Delete"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </li>
-                );
-              })
+              servers.map((s, i) => (
+                <SettingsServerItem
+                  key={s.label}
+                  server={s}
+                  index={i}
+                  isDragging={draggedIndex === i}
+                  testStatus={testStatus[s.label] || 'idle'}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                  onTest={handleTest}
+                  onEdit={handleOpenEditWindow}
+                  onRemove={handleRemove}
+                />
+              ))
             )}
           </ul>
         </div>
@@ -366,7 +281,6 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
         </div>
       </div>
 
-      {/* Settings Footer */}
       <footer className="panel-footer">
         <button type="button" onClick={closeWindow} className="btn-secondary">
           Cancel

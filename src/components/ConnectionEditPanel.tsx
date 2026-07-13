@@ -1,12 +1,13 @@
 import { emit, listen } from '@tauri-apps/api/event';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { AlertCircle, Check, CheckCircle, Plus, RefreshCw, Server, X } from 'lucide-react';
+import { AlertCircle, Check, CheckCircle, Plus, RefreshCw, Server } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import PanelHeader from '@/components/PanelHeader';
+import { useTauriWindow } from '@/hooks/useTauriWindow';
 import { loginServer } from '@/lib/zabbix-api';
 import type { ServerConfig } from '@/types/config';
 
 function ConnectionEditPanel() {
-  const appWindow = getCurrentWebviewWindow();
+  const { hideWindow } = useTauriWindow();
 
   // Index and Form states
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -51,20 +52,18 @@ function ConnectionEditPanel() {
 
   // Reset form test status when inputs change
   useEffect(() => {
-    // Intentionally reference input values to trigger status reset when any change
-    if (
-      formLabel ||
-      formHost ||
-      formUser ||
-      formPass ||
-      formApiKey ||
-      authType ||
-      formBasicAuthUser ||
-      formBasicAuthPass ||
-      useBasicAuth
-    ) {
-      // Input changed
-    }
+    // Reference inputs to run this effect when any of them change
+    const _ = {
+      formLabel,
+      formHost,
+      formUser,
+      formPass,
+      formApiKey,
+      authType,
+      formBasicAuthUser,
+      formBasicAuthPass,
+      useBasicAuth,
+    };
     setFormTestStatus('idle');
     setFormErrorMessage(null);
   }, [
@@ -79,20 +78,9 @@ function ConnectionEditPanel() {
     useBasicAuth,
   ]);
 
-  const handleMouseDown = async (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
-    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) return;
-    e.preventDefault();
-    try {
-      await appWindow.startDragging();
-    } catch (err) {
-      console.error('Drag failed:', err);
-    }
-  };
-
   const handleClose = async () => {
     try {
-      await appWindow.hide();
+      await hideWindow();
     } catch (err) {
       console.error('Failed to hide window:', err);
     }
@@ -149,7 +137,7 @@ function ConnectionEditPanel() {
 
     try {
       await emit('server-saved', { server, editIndex });
-      await appWindow.hide();
+      await hideWindow();
     } catch (err) {
       console.error('Failed to save connection:', err);
     }
@@ -157,15 +145,11 @@ function ConnectionEditPanel() {
 
   return (
     <div className="settings-panel-wrapper">
-      <header role="toolbar" className="panel-header settings-header" onMouseDown={handleMouseDown}>
-        <div className="panel-header-title-container">
-          <Server size={18} className="icon-indigo" />
-          <span className="panel-header-title">{editIndex !== null ? 'Edit Connection' : 'Add Connection'}</span>
-        </div>
-        <button type="button" onClick={handleClose} className="settings-close-btn" title="Close">
-          <X size={16} />
-        </button>
-      </header>
+      <PanelHeader
+        title={editIndex !== null ? 'Edit Connection' : 'Add Connection'}
+        icon={<Server size={18} className="icon-indigo" />}
+        onClose={handleClose}
+      />
 
       <main className="panel-content flex flex-col gap-3">
         {/* Connection Label */}

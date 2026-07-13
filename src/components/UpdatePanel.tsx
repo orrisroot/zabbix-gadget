@@ -1,124 +1,29 @@
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { AlertCircle, CheckCircle2, Download, Info, Loader2, RefreshCw, Sparkles, X } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
-
-type UpdateStatus = 'checking' | 'available' | 'no-update' | 'downloading' | 'relaunch-pending' | 'error';
-
-interface UpdateCheckResult {
-  status: 'noUpdate' | 'available' | 'error';
-  currentVersion?: string;
-  newVersion?: string;
-  body?: string;
-  message?: string;
-}
-
-interface ProgressPayload {
-  downloaded: number;
-  total_len: number | null;
-}
+import { AlertCircle, CheckCircle2, Download, Info, Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import PanelHeader from '@/components/PanelHeader';
+import { useAppUpdate } from '@/hooks/useAppUpdate';
+import { useTauriWindow } from '@/hooks/useTauriWindow';
 
 function UpdatePanel() {
-  const appWindow = getCurrentWebviewWindow();
-  const [status, setStatus] = useState<UpdateStatus>('checking');
-  const [currentVersion, setCurrentVersion] = useState<string>('');
-  const [newVersion, setNewVersion] = useState<string>('');
-  const [changelog, setChangelog] = useState<string>('');
-  const [errorMessage, setErrorMessage] = useState<string>('');
-  const [downloadProgress, setDownloadProgress] = useState<{ downloaded: number; total: number | null }>({
-    downloaded: 0,
-    total: null,
-  });
-  const [showDebug, setShowDebug] = useState(true);
-
-  const handleMouseDown = async (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
-    if ((e.target as HTMLElement).closest('button')) return;
-    e.preventDefault();
-    try {
-      await appWindow.startDragging();
-    } catch (err) {
-      console.error('Drag failed:', err);
-    }
-  };
-
-  const closeWindow = async () => {
-    try {
-      await appWindow.hide();
-    } catch (err) {
-      console.error('Failed to hide window:', err);
-    }
-  };
-
-  const checkForUpdates = useCallback(async () => {
-    setStatus('checking');
-    setErrorMessage('');
-    setDownloadProgress({ downloaded: 0, total: null });
-
-    try {
-      const result = await invoke<UpdateCheckResult>('check_for_update');
-      if (result.status === 'available') {
-        setStatus('available');
-        setCurrentVersion(result.currentVersion || '');
-        setNewVersion(result.newVersion || '');
-        setChangelog(result.body || '');
-      } else if (result.status === 'noUpdate') {
-        setStatus('no-update');
-      } else {
-        setStatus('error');
-        setErrorMessage(result.message || 'Unknown error occurred while checking.');
-      }
-    } catch (err) {
-      setStatus('error');
-      setErrorMessage(String(err));
-    }
-  }, []);
-
-  const startInstall = async () => {
-    setStatus('downloading');
-    setDownloadProgress({ downloaded: 0, total: null });
-
-    try {
-      await invoke('install_update');
-      setStatus('relaunch-pending');
-    } catch (err) {
-      setStatus('error');
-      setErrorMessage(String(err));
-    }
-  };
-
-  const handleRelaunch = async () => {
-    try {
-      await invoke('relaunch_app');
-    } catch (err) {
-      console.error('Failed to relaunch:', err);
-    }
-  };
-
-  useEffect(() => {
-    // Run checking on mount
-    checkForUpdates();
-
-    // Listen for manual trigger-check event
-    const unlistenTrigger = listen('trigger-check', () => {
-      checkForUpdates();
-    });
-
-    // Listen for progress updates
-    const unlistenProgress = listen<ProgressPayload>('update-progress', (event) => {
-      setStatus('downloading');
-      setDownloadProgress({
-        downloaded: event.payload.downloaded,
-        total: event.payload.total_len,
-      });
-    });
-
-    return () => {
-      unlistenTrigger.then((unlisten) => unlisten());
-      unlistenProgress.then((unlisten) => unlisten());
-    };
-  }, [checkForUpdates]);
+  const { hideWindow } = useTauriWindow();
+  const {
+    status,
+    setStatus,
+    currentVersion,
+    setCurrentVersion,
+    newVersion,
+    setNewVersion,
+    changelog,
+    setChangelog,
+    errorMessage,
+    setErrorMessage,
+    downloadProgress,
+    setDownloadProgress,
+    showDebug,
+    setShowDebug,
+    checkForUpdates,
+    startInstall,
+    handleRelaunch,
+  } = useAppUpdate();
 
   // Format bytes to a human readable format
   const formatBytes = (bytes: number) => {
@@ -139,13 +44,7 @@ function UpdatePanel() {
       {import.meta.env.DEV && showDebug && (
         <div className="update-debug-ui">
           <span className="text-slate-400 font-bold mr-1">Debug UI:</span>
-          <button
-            type="button"
-            onClick={() => {
-              setStatus('checking');
-            }}
-            className="update-debug-btn"
-          >
+          <button type="button" onClick={() => setStatus('checking')} className="update-debug-btn">
             Checking
           </button>
           <button
@@ -204,32 +103,16 @@ function UpdatePanel() {
           </button>
         </div>
       )}
-      {/* Drag Header */}
-      <header role="toolbar" className="panel-header settings-header" onMouseDown={handleMouseDown}>
-        <button
-          type="button"
-          className={`panel-header-title-container ${import.meta.env.DEV ? 'cursor-pointer select-none' : ''} bg-transparent border-none p-0 outline-none text-left`}
-          onMouseDown={(e) => {
-            if (import.meta.env.DEV) {
-              e.stopPropagation();
-            }
-          }}
-          onClick={() => {
-            if (import.meta.env.DEV) {
-              setShowDebug(!showDebug);
-            }
-          }}
-          title={import.meta.env.DEV ? 'Click to toggle debug controls' : undefined}
-        >
-          <Sparkles size={18} className="icon-sparkles" />
-          <span className="panel-header-title">Software Update</span>
-        </button>
-        {status !== 'downloading' && (
-          <button type="button" onClick={closeWindow} className="settings-close-btn" title="Close">
-            <X size={16} />
-          </button>
-        )}
-      </header>
+
+      <PanelHeader
+        title="Software Update"
+        icon={<Sparkles size={18} className="icon-sparkles" />}
+        showCloseButton={status !== 'downloading'}
+        onClose={hideWindow}
+        onTitleClick={import.meta.env.DEV ? () => setShowDebug(!showDebug) : undefined}
+        titleTitle={import.meta.env.DEV ? 'Click to toggle debug controls' : undefined}
+        titleClassName={import.meta.env.DEV ? 'cursor-pointer select-none' : ''}
+      />
 
       {/* Main Content Area */}
       <main className="panel-content panel-content-centered">
@@ -333,26 +216,26 @@ function UpdatePanel() {
       {/* Action Buttons (Footer) */}
       <footer className="panel-footer">
         {status === 'checking' && (
-          <button type="button" onClick={closeWindow} className="btn-secondary">
+          <button type="button" onClick={hideWindow} className="btn-secondary">
             Cancel
           </button>
         )}
 
         {status === 'downloading' && (
-          <button type="button" onClick={closeWindow} className="btn-secondary">
+          <button type="button" onClick={hideWindow} className="btn-secondary">
             Cancel
           </button>
         )}
 
         {status === 'no-update' && (
-          <button type="button" onClick={closeWindow} className="btn-primary">
+          <button type="button" onClick={hideWindow} className="btn-primary">
             Done
           </button>
         )}
 
         {status === 'available' && (
           <>
-            <button type="button" onClick={closeWindow} className="btn-secondary">
+            <button type="button" onClick={hideWindow} className="btn-secondary">
               Later
             </button>
             <button type="button" onClick={startInstall} className="btn-primary">
@@ -364,7 +247,7 @@ function UpdatePanel() {
 
         {status === 'relaunch-pending' && (
           <>
-            <button type="button" onClick={closeWindow} className="btn-secondary">
+            <button type="button" onClick={hideWindow} className="btn-secondary">
               Later
             </button>
             <button type="button" onClick={handleRelaunch} className="btn-primary btn-primary-success">
@@ -376,7 +259,7 @@ function UpdatePanel() {
 
         {status === 'error' && (
           <>
-            <button type="button" onClick={closeWindow} className="btn-secondary">
+            <button type="button" onClick={hideWindow} className="btn-secondary">
               Close
             </button>
             <button type="button" onClick={checkForUpdates} className="btn-primary">
