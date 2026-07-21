@@ -1,7 +1,7 @@
 import { emit, listen } from '@tauri-apps/api/event';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { ChevronDown, Plus, Server as ServerIcon, Settings as SettingsIcon, Sliders } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PanelHeader from '@/components/PanelHeader';
 import SettingsServerItem from '@/components/SettingsServerItem';
 import { useTauriWindow } from '@/hooks/useTauriWindow';
@@ -22,6 +22,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
 
   // Drag and drop states
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const draggedIndexRef = useRef<number | null>(null);
 
   // Connection test statuses
   const [testStatus, setTestStatus] = useState<{
@@ -113,20 +114,25 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     setServers(servers.filter((_, i) => i !== idx));
   };
 
-  const handleDragStart = (_e: React.DragEvent, index: number) => {
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    draggedIndexRef.current = index;
     setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
+    const draggedIdx = draggedIndexRef.current;
+    if (draggedIdx === null || draggedIdx === index) return;
 
     const updated = [...servers];
-    const draggedItem = updated[draggedIndex];
-    updated.splice(draggedIndex, 1);
+    const draggedItem = updated[draggedIdx];
+    updated.splice(draggedIdx, 1);
     updated.splice(index, 0, draggedItem);
     setServers(updated);
 
+    draggedIndexRef.current = index;
     setDraggedIndex(index);
   };
 
@@ -135,6 +141,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
   };
 
   const handleDragEnd = () => {
+    draggedIndexRef.current = null;
     setDraggedIndex(null);
   };
 
