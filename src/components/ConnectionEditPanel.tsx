@@ -24,6 +24,18 @@ function ConnectionEditPanel() {
   const [formTestStatus, setFormTestStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
   const [formErrorMessage, setFormErrorMessage] = useState<string | null>(null);
 
+  const hostTrimmed = formHost.trim();
+  const isHostUrlValid =
+    !hostTrimmed ||
+    (() => {
+      try {
+        const parsed = new URL(hostTrimmed);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+      } catch (_) {
+        return false;
+      }
+    })();
+
   // Listen to init events to populate fields dynamically
   useEffect(() => {
     const listenPromise = listen<{ editIndex: number | null; server: ServerConfig | null }>(
@@ -87,7 +99,7 @@ function ConnectionEditPanel() {
   };
 
   const handleTestFormServer = async () => {
-    if (!formHost.trim()) return;
+    if (!formHost.trim() || !isHostUrlValid) return;
     setFormTestStatus('loading');
     setFormErrorMessage(null);
 
@@ -120,7 +132,7 @@ function ConnectionEditPanel() {
   };
 
   const handleSave = async () => {
-    if (!formLabel.trim() || !formHost.trim()) return;
+    if (!formLabel.trim() || !formHost.trim() || !isHostUrlValid) return;
     const server: ServerConfig = {
       label: formLabel.trim(),
       host: formHost.trim(),
@@ -151,10 +163,10 @@ function ConnectionEditPanel() {
         onClose={handleClose}
       />
 
-      <main className="panel-content flex flex-col gap-3">
+      <main className="settings-form-content">
         {/* Connection Label */}
-        <div className="flex flex-col gap-1">
-          <span className="text-xxs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Label</span>
+        <div className="settings-form-group">
+          <span className="settings-form-label">Label</span>
           <input
             placeholder="Label"
             value={formLabel}
@@ -164,23 +176,27 @@ function ConnectionEditPanel() {
         </div>
 
         {/* Host URL */}
-        <div className="flex flex-col gap-1">
-          <span className="text-xxs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-            Host URL
-          </span>
-          <input
-            placeholder="https://zabbix.example.com"
-            value={formHost}
-            onChange={(e) => setFormHost(e.target.value)}
-            className="settings-input"
-          />
+        <div className="settings-form-group">
+          <span className="settings-form-label">Host URL</span>
+          <div className="relative group">
+            <input
+              placeholder="https://zabbix.example.com"
+              value={formHost}
+              onChange={(e) => setFormHost(e.target.value)}
+              className={`settings-input ${!isHostUrlValid ? 'settings-input-error' : ''}`}
+            />
+            {!isHostUrlValid && (
+              <div className="settings-tooltip">
+                URL must start with http:// or https://
+                <div className="settings-tooltip-arrow" />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Authentication Type Switch */}
-        <div className="flex flex-col gap-1">
-          <span className="text-xxs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-            Auth Type
-          </span>
+        <div className="settings-form-group">
+          <span className="settings-form-label">Auth Type</span>
           <div className="settings-auth-tabs">
             <button
               type="button"
@@ -205,11 +221,9 @@ function ConnectionEditPanel() {
 
         {/* User & Password or API Key Input */}
         {authType === 'userpass' ? (
-          <div className="flex gap-2">
-            <div className="flex-1 flex flex-col gap-1">
-              <span className="text-xxs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                User
-              </span>
+          <div className="settings-form-row">
+            <div className="settings-form-group-flex">
+              <span className="settings-form-label">User</span>
               <input
                 placeholder="User"
                 value={formUser}
@@ -217,10 +231,8 @@ function ConnectionEditPanel() {
                 className="settings-input"
               />
             </div>
-            <div className="flex-1 flex flex-col gap-1">
-              <span className="text-xxs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                Password
-              </span>
+            <div className="settings-form-group-flex">
+              <span className="settings-form-label">Password</span>
               <input
                 placeholder="Password"
                 type="password"
@@ -231,10 +243,8 @@ function ConnectionEditPanel() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-1">
-            <span className="text-xxs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              API Key
-            </span>
+          <div className="settings-form-group">
+            <span className="settings-form-label">API Key</span>
             <input
               placeholder="API Key"
               type="password"
@@ -262,10 +272,8 @@ function ConnectionEditPanel() {
         {/* Basic Auth Credentials Fields */}
         {useBasicAuth && (
           <div className="settings-basic-auth-fields">
-            <div className="flex-1 flex flex-col gap-1">
-              <span className="text-xxs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                Basic User
-              </span>
+            <div className="settings-form-group-flex">
+              <span className="settings-form-label">Basic User</span>
               <input
                 placeholder="User"
                 value={formBasicAuthUser}
@@ -273,10 +281,8 @@ function ConnectionEditPanel() {
                 className="settings-input"
               />
             </div>
-            <div className="flex-1 flex flex-col gap-1">
-              <span className="text-xxs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                Basic Password
-              </span>
+            <div className="settings-form-group-flex">
+              <span className="settings-form-label">Basic Password</span>
               <input
                 placeholder="Password"
                 type="password"
@@ -292,49 +298,49 @@ function ConnectionEditPanel() {
       </main>
 
       <footer className="panel-footer">
-        <button
-          type="button"
-          onClick={handleTestFormServer}
-          disabled={!formHost.trim()}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-md transition-all cursor-pointer border select-none ${
-            !formHost.trim()
-              ? 'opacity-40 cursor-not-allowed bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-transparent'
-              : formTestStatus === 'loading'
-                ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30'
-                : formTestStatus === 'ok'
-                  ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
-                  : formTestStatus === 'error'
-                    ? 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
-                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-700'
-          }`}
-        >
-          {formTestStatus === 'loading' ? (
-            <>
-              <RefreshCw size={14} className="icon-spin" /> Testing...
-            </>
-          ) : formTestStatus === 'ok' ? (
-            <>
-              <CheckCircle size={14} /> Connection OK
-            </>
-          ) : formTestStatus === 'error' ? (
-            <>
-              <AlertCircle size={14} /> Failed
-            </>
-          ) : (
-            <>
-              <RefreshCw size={14} /> Test
-            </>
-          )}
+        <button type="button" onClick={handleClose} className="btn-secondary">
+          Cancel
         </button>
 
-        <div className="flex gap-2">
-          <button type="button" onClick={handleClose} className="btn-secondary">
-            Cancel
+        <div className="settings-form-row">
+          <button
+            type="button"
+            onClick={handleTestFormServer}
+            disabled={!formHost.trim() || !isHostUrlValid}
+            className={`settings-btn-test ${
+              !formHost.trim() || !isHostUrlValid
+                ? 'settings-btn-test-disabled'
+                : formTestStatus === 'loading'
+                  ? 'settings-btn-test-loading'
+                  : formTestStatus === 'ok'
+                    ? 'settings-btn-test-ok'
+                    : formTestStatus === 'error'
+                      ? 'settings-btn-test-error'
+                      : 'settings-btn-test-idle'
+            }`}
+          >
+            {formTestStatus === 'loading' ? (
+              <>
+                <RefreshCw size={14} className="icon-spin" /> Testing...
+              </>
+            ) : formTestStatus === 'ok' ? (
+              <>
+                <CheckCircle size={14} /> Success
+              </>
+            ) : formTestStatus === 'error' ? (
+              <>
+                <AlertCircle size={14} /> Failed
+              </>
+            ) : (
+              <>
+                <RefreshCw size={14} /> Test
+              </>
+            )}
           </button>
           <button
             type="button"
             onClick={handleSave}
-            disabled={!formLabel.trim() || !formHost.trim()}
+            disabled={!formLabel.trim() || !formHost.trim() || !isHostUrlValid || formTestStatus !== 'ok'}
             className="btn-primary"
           >
             {editIndex !== null ? (
