@@ -70,41 +70,50 @@ function TriggerCell({ priority, status, isError, isLoading }: TriggerCellProps)
     }
   };
 
-  const handleMouseEnter = async (e: MouseEvent) => {
-    if (count === 0) return;
-
-    // Request to cancel any pending hide operation on the tooltip window
-    await emit('cancel-hide-tooltip');
-
+  const showTooltip = async (e: MouseEvent, forceUpdateContent = false) => {
     try {
       const tooltipWin = await WebviewWindow.getByLabel('tooltip');
       if (!tooltipWin) return;
 
-      // 1. Position it before showing
+      // Always update position to follow cursor
       await updateTooltipPosition(e);
 
-      await emit('update-tooltip', {
-        label: priorityInfo.label,
-        count,
-        priorityLabel: priorityInfo.label,
-        colorClass: priorityInfo.color,
-        bgColor: priorityInfo.bgColor,
-        details,
-      });
+      const isVisible = await tooltipWin.isVisible();
+      if (forceUpdateContent || !isVisible) {
+        await emit('update-tooltip', {
+          label: priorityInfo.label,
+          count,
+          priorityLabel: priorityInfo.label,
+          colorClass: priorityInfo.color,
+          bgColor: priorityInfo.bgColor,
+          details,
+        });
+      }
 
-      // 2. Show the window
-      await tooltipWin.show();
+      if (!isVisible) {
+        // Show the window
+        await tooltipWin.show();
 
-      // 3. Position again immediately after showing to enforce position on Windows/Linux window managers
-      await updateTooltipPosition(e);
+        // Position again immediately after showing to enforce position on Windows/Linux window managers
+        await updateTooltipPosition(e);
+      }
     } catch (err) {
       console.error('Failed to show tooltip window:', err);
     }
   };
 
+  const handleMouseEnter = async (e: MouseEvent) => {
+    if (count === 0) return;
+    // Request to cancel any pending hide operation on the tooltip window
+    await emit('cancel-hide-tooltip');
+    await showTooltip(e, true);
+  };
+
   const handleMouseMove = async (e: MouseEvent) => {
     if (count === 0) return;
-    await updateTooltipPosition(e);
+    // Cancel any pending hide operation since we are actively moving inside the trigger cell
+    await emit('cancel-hide-tooltip');
+    await showTooltip(e, false);
   };
 
   const handleMouseLeave = async () => {

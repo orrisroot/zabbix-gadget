@@ -48,7 +48,7 @@ function TooltipPanel() {
 
     // Listen for host mouseleave event requests
     const unlistenRequestHide = listen('request-hide-tooltip', () => {
-      scheduleHide(200); // 200ms buffer to allow cursor to travel from cell to tooltip window
+      scheduleHide(400); // 400ms buffer to allow cursor to travel from cell to tooltip window
     });
 
     // Listen for cancellations (e.g. entering another cell)
@@ -71,7 +71,7 @@ function TooltipPanel() {
 
   const handleMouseLeave = () => {
     // Hide tooltip shortly after mouse leaves the tooltip window
-    scheduleHide(150);
+    scheduleHide(400);
   };
 
   if (!data) {

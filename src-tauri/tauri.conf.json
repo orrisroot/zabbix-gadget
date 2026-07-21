@@ -49,9 +49,10 @@
         "resizable": false,
         "fullscreen": false,
         "decorations": false,
-        "alwaysOnTop": false,
+        "alwaysOnTop": true,
         "transparent": true,
         "visible": false,
+        "focus": false,
         "url": "index.html?window=tooltip"
       },
       {
