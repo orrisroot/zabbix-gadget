@@ -53,7 +53,23 @@
 @layer components {
   /* --- Base Window / Panel Layouts --- */
   .window-base {
-    @apply flex flex-col h-full w-full select-none overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-800 relative;
+    @apply flex flex-col h-full w-full select-none overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-800 relative rounded-lg;
+  }
+
+  .app-header {
+    @apply flex items-center justify-between cursor-grab select-none flex-shrink-0 font-bold bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-1 py-0;
+  }
+
+  .app-main {
+    @apply flex-1 overflow-y-auto px-1 py-0.5;
+  }
+
+  .app-main-empty {
+    @apply flex flex-col justify-center min-h-0;
+  }
+
+  .app-footer {
+    @apply flex items-center justify-between flex-shrink-0 bg-slate-50/50 dark:bg-slate-900/35 border-t border-slate-200 dark:border-slate-800 px-2 py-0.5 text-gray-500 dark:text-gray-400 text-xxxs font-medium tracking-wide;
   }
 
   .panel-popup {
@@ -72,18 +88,6 @@
     @apply flex items-center justify-between flex-shrink-0 bg-slate-50/50 dark:bg-slate-900/35 border-t border-slate-200 dark:border-slate-800 px-3 py-2 text-slate-500 dark:text-slate-400 text-xs;
   }
 
-  .app-header {
-    @apply flex items-center justify-between cursor-grab select-none flex-shrink-0 font-bold bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-2 py-1;
-  }
-
-  .app-main {
-    @apply flex-1 overflow-y-auto px-2 py-1;
-  }
-
-  .app-footer {
-    @apply flex items-center justify-between flex-shrink-0 bg-slate-50/50 dark:bg-slate-900/35 border-t border-slate-200 dark:border-slate-800 px-2 py-1 text-slate-500 dark:text-slate-400 text-xs;
-  }
-
   .panel-content {
     @apply flex-1 overflow-y-auto p-4;
   }
@@ -94,10 +98,6 @@
 
   .panel-content-centered {
     @apply flex flex-col justify-center;
-  }
-
-  .app-main-empty {
-    @apply flex flex-col justify-center min-h-0;
   }
 
   /* --- Buttons --- */
@@ -129,7 +129,7 @@
   }
 
   .header-title {
-    @apply text-xs font-bold text-gray-600 dark:text-gray-300 tracking-wider uppercase;
+    @apply text-xxs font-bold text-gray-600 dark:text-gray-300 tracking-wider uppercase;
   }
 
   .header-actions-container {
@@ -153,19 +153,19 @@
   }
 
   .server-link {
-    @apply text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 hover:underline cursor-pointer;
+    @apply text-blue-600 dark:text-sky-400 hover:text-blue-500 dark:hover:text-sky-300 hover:underline cursor-pointer;
   }
 
   .trigger-table {
-    @apply w-full table-fixed border-separate border-spacing-x-1 border-spacing-y-1 text-xxs;
+    @apply w-full table-fixed border-separate border-spacing-x-0.5 border-spacing-y-0.5 text-xxs;
   }
 
   .trigger-table-th-primary {
-    @apply text-left pb-1 px-2 w-[110px] font-semibold text-xxxs uppercase tracking-wider;
+    @apply text-left w-[110px] font-semibold text-xxxs uppercase tracking-wider;
   }
 
   .trigger-table-th-secondary {
-    @apply text-center pb-1 w-[70px] font-semibold text-xxxs uppercase tracking-wider;
+    @apply text-center w-[70px] font-semibold text-xxxs uppercase tracking-wider;
   }
 
   .trigger-table-tr {
@@ -173,11 +173,11 @@
   }
 
   .trigger-table-td-primary {
-    @apply align-middle font-bold text-slate-800 dark:text-slate-200 text-xxs truncate px-2 max-w-[110px];
+    @apply align-middle font-bold text-slate-800 dark:text-slate-200 text-xxs truncate max-w-[110px];
   }
 
   .trigger-cell {
-    @apply text-center py-1 rounded-sm cursor-pointer font-bold transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 shadow-sm;
+    @apply text-center py-0 rounded-sm cursor-pointer font-bold transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 shadow-sm;
   }
 
   .trigger-cell-empty {
