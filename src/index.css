@@ -213,7 +213,7 @@
   }
 
   .error-overlay {
-    @apply flex flex-col items-center justify-center p-5 text-center gap-2.5 bg-gray-100/40 dark:bg-gray-900/30 border border-dashed border-slate-200 dark:border-gray-800/60 rounded-md w-full mx-auto select-none my-1;
+    @apply flex flex-col items-center justify-center p-5 text-center gap-2.5 bg-gray-100/40 dark:bg-gray-900/30 border border-dashed border-slate-200 dark:border-gray-800/60 rounded-md w-full mx-auto select-none;
   }
 
   .error-overlay-title {

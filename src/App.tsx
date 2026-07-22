@@ -98,20 +98,27 @@ function App() {
       const mainContentEl = document.querySelector('.app-main table') || document.querySelector('.app-main > div');
       const footerEl = document.querySelector('.app-footer');
 
-      if (headerEl) {
+      if (headerEl && mainContentEl) {
         const headerHeight = headerEl.getBoundingClientRect().height;
-        const mainHeight = mainContentEl ? mainContentEl.getBoundingClientRect().height : 120;
+        const mainHeight = mainContentEl.getBoundingClientRect().height;
         const footerHeight = footerEl ? footerEl.getBoundingClientRect().height : 0;
 
-        // Sum elements + main paddings (4px top, 4px bottom) + container border (2px) + 1px safety buffer to prevent OS border discrepancies
-        const totalHeight = Math.ceil(headerHeight + mainHeight + footerHeight + 8 + 2 + 1);
+        // Sum elements + main paddings (2px top, 2px bottom) + container border (2px) + 1px safety buffer to prevent OS border discrepancies
+        const totalHeight = Math.ceil(headerHeight + mainHeight + footerHeight + 4 + 2 + 1);
 
-        // Cap the window height between 90px min and 550px max to prevent shrinking
-        const targetHeight = Math.max(Math.min(totalHeight, 550), 90);
+        // Cap the window height between 70px min and 550px max to prevent shrinking
+        const targetHeight = Math.max(Math.min(totalHeight, 550), 70);
 
         try {
+          console.log('headerHeight', headerHeight);
+          console.log('mainHeight', mainHeight);
+          console.log('footerHeight', footerHeight);
+          console.log('totalHeight', totalHeight, 'targetHeight', targetHeight);
           const appWindow = getCurrentWebviewWindow();
-          await appWindow.setSize(new LogicalSize(670, targetHeight));
+          const logicalSize = new LogicalSize(600, targetHeight);
+          await appWindow.setSize(logicalSize);
+          await appWindow.setMaxSize(logicalSize);
+          await appWindow.setMinSize(logicalSize);
         } catch (err) {
           console.error('App: failed to resize window:', err);
         }

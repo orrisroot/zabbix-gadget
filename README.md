@@ -10,9 +10,9 @@ A modern desktop gadget for monitoring Zabbix server triggers, built with **Taur
 - **Color-coded status**: Distinguishes 6 severity levels with distinct status colors
 - **Hover tooltips**: Shows detailed trigger information on hover
 - **Auto-refresh**: Automatically updates triggers at a configurable interval (default: 5 minutes)
-- **Frameless window**: Provides an always-on-top window with state restoration for position and size
+- **Frameless window**: Provides a semi-transparent, always-on-top window with automatic sizing that fits the content height
 - **System Tray support**: Runs in the background with tray menu actions for updates and visibility
-- **Settings UI**: Offers interactive configuration including drag-and-drop server reordering
+- **Settings UI**: Offers interactive configuration including host URL format validation and drag-and-drop server reordering
 - **Lightweight footprint**: Runs with minimal resource usage powered by Tauri v2
 
 ## Prerequisites
