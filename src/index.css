@@ -84,6 +84,11 @@
     @apply flex-1 overflow-y-auto p-4;
   }
 
+  /* Variant for panels with fixed-height content that should never scroll */
+  .panel-content-no-scroll {
+    @apply flex-1 overflow-hidden p-4;
+  }
+
   .window-transparent-wrapper {
     @apply h-full w-full bg-transparent select-none overflow-hidden flex flex-col;
   }
@@ -217,19 +222,38 @@
   }
 
   /* -------------------------------------
-     Settings Window
+     Panel Wrappers
   -------------------------------------- */
+
+  /* Generic panel wrapper — shared by all sub-window panels */
+  .panel-wrapper {
+    @apply flex flex-col h-full w-full text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950;
+  }
+
+  /* Alias kept for backward-compatibility with settings/connection-edit panels */
   .settings-panel-wrapper {
     @apply flex flex-col h-full w-full text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950;
   }
 
+  /* -------------------------------------
+     Settings Window
+  -------------------------------------- */
   .settings-header {
-    padding: 10px 14px !important;
+    padding: 10px 14px;
   }
 
   .settings-close-btn {
     @apply rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer;
-    padding: 6px !important;
+    padding: 6px;
+  }
+
+  /* Compact header variant — higher specificity avoids !important */
+  .panel-header.settings-header.panel-header-compact {
+    padding: 6px 10px;
+  }
+
+  .settings-close-btn.panel-close-btn-compact {
+    padding: 3px;
   }
 
   .settings-main {
@@ -649,6 +673,65 @@
 
   .update-error-desc {
     @apply text-xxs text-rose-600 dark:text-rose-400 mt-2 leading-relaxed break-words text-center;
+  }
+
+  /* -------------------------------------
+     About Panel
+  -------------------------------------- */
+  .about-header {
+    @apply flex flex-col items-center gap-1;
+  }
+
+  .about-icon-wrapper {
+    @apply p-2.5 bg-indigo-50 dark:bg-indigo-500/10 rounded-full border border-indigo-100 dark:border-indigo-500/20 mb-1 flex items-center justify-center;
+  }
+
+  .about-title {
+    @apply text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight;
+  }
+
+  .about-version {
+    @apply text-xxs font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/50;
+  }
+
+  .about-description {
+    @apply text-xxs text-slate-600 dark:text-slate-300 leading-relaxed text-center px-1;
+  }
+
+  .about-info {
+    @apply w-full bg-slate-50 dark:bg-slate-800/70 rounded-lg p-2.5 border border-slate-200 dark:border-slate-700/60 flex flex-col gap-2 text-xxs;
+  }
+
+  .about-info-row {
+    @apply flex items-center justify-between;
+  }
+
+  .about-label {
+    @apply text-slate-500 dark:text-slate-400 font-medium;
+  }
+
+  .about-val {
+    @apply text-slate-700 dark:text-slate-200 font-semibold;
+  }
+
+  .about-link {
+    @apply text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors cursor-pointer;
+  }
+
+  .about-main {
+    @apply flex-1 overflow-hidden flex flex-col items-center justify-center py-2.5 px-4 gap-2.5;
+  }
+
+  .about-footer {
+    @apply flex items-center justify-between flex-shrink-0 bg-slate-50/50 dark:bg-slate-900/35 border-t border-slate-200 dark:border-slate-800 px-3 py-2 text-slate-500 dark:text-slate-400 text-xs;
+  }
+
+  .about-btn-close {
+    @apply flex items-center justify-center gap-1.5 py-1 px-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md transition-colors cursor-pointer;
+  }
+
+  .about-btn-update {
+    @apply flex items-center justify-center gap-1.5 py-1 px-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-md cursor-pointer disabled:opacity-50 transition-all shadow-md shadow-indigo-600/10 active:scale-[0.98];
   }
 
   /* --- Helper & Icon Mixins --- */

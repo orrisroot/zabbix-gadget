@@ -10,6 +10,7 @@ interface PanelHeaderProps {
   onTitleClick?: (e: React.MouseEvent) => void;
   titleClassName?: string;
   titleTitle?: string;
+  compact?: boolean;
 }
 
 export function PanelHeader({
@@ -20,6 +21,7 @@ export function PanelHeader({
   onTitleClick,
   titleClassName = '',
   titleTitle,
+  compact = false,
 }: PanelHeaderProps) {
   const { handleMouseDown, hideWindow } = useTauriWindow();
 
@@ -59,11 +61,20 @@ export function PanelHeader({
   };
 
   return (
-    <header role="toolbar" className="panel-header settings-header" onMouseDown={handleMouseDown}>
+    <header
+      role="toolbar"
+      className={`panel-header settings-header ${compact ? 'panel-header-compact' : ''}`}
+      onMouseDown={handleMouseDown}
+    >
       {renderTitle()}
       {showCloseButton && (
-        <button type="button" onClick={handleClose} className="settings-close-btn" title="Close">
-          <X size={16} />
+        <button
+          type="button"
+          onClick={handleClose}
+          className={`settings-close-btn ${compact ? 'panel-close-btn-compact' : ''}`}
+          title="Close"
+        >
+          <X size={compact ? 14 : 16} />
         </button>
       )}
     </header>

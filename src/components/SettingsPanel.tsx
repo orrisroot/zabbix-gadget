@@ -23,7 +23,7 @@ interface SettingsPanelProps {
   onClose: () => void;
 }
 
-function SettingsPanel({ onClose }: SettingsPanelProps) {
+export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const { hideWindow } = useTauriWindow();
   const { config } = useZabbixStore();
   const [servers, setServers] = useState<ServerConfig[]>(config?.servers ?? []);
@@ -367,7 +367,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
         </div>
       </div>
 
-      <footer className="panel-footer">
+      <footer className="panel-footer flex justify-between items-center">
         <button type="button" onClick={closeWindow} className="btn-secondary">
           Cancel
         </button>
