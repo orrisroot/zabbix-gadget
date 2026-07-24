@@ -484,6 +484,18 @@
     @apply mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-xxs text-slate-500 dark:text-slate-400 font-medium;
   }
 
+  .tooltip-footer {
+    @apply flex items-center justify-end gap-1.5 border-t border-slate-200 dark:border-slate-800 flex-shrink-0 pt-2 mt-2 text-xxs font-medium;
+  }
+
+  .tooltip-footer-label {
+    @apply text-slate-400 dark:text-slate-500;
+  }
+
+  .tooltip-footer-server {
+    @apply font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[280px];
+  }
+
   .tooltip-bubble-not-classified {
     @apply bg-gray-500;
   }

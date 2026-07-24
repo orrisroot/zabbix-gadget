@@ -29,7 +29,14 @@ export function TriggerRow({ server, status, idx }: TriggerRowProps) {
         </a>
       </td>
       {PRIORITY_ORDER.map((priority) => (
-        <TriggerCell key={priority} priority={priority} status={status} isError={isError} isLoading={isLoading} />
+        <TriggerCell
+          key={priority}
+          priority={priority}
+          status={status}
+          isError={isError}
+          isLoading={isLoading}
+          serverLabel={server.label}
+        />
       ))}
     </tr>
   );

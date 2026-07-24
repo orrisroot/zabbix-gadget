@@ -5,6 +5,7 @@ import type { ZabbixTrigger } from '@/types/zabbix';
 
 interface TooltipData {
   label: string;
+  serverLabel?: string;
   count: number;
   priorityLabel: string;
   colorClass: string;
@@ -130,6 +131,13 @@ function TooltipPanel() {
           );
         })}
       </div>
+
+      {data.serverLabel && (
+        <div className="tooltip-footer">
+          <span className="tooltip-footer-label">Server:</span>
+          <span className="tooltip-footer-server">{data.serverLabel}</span>
+        </div>
+      )}
     </div>
   );
 }

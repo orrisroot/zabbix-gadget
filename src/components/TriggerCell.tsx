@@ -12,9 +12,10 @@ interface TriggerCellProps {
   } | null;
   isError: boolean;
   isLoading: boolean;
+  serverLabel: string;
 }
 
-function TriggerCell({ priority, status, isError, isLoading }: TriggerCellProps) {
+function TriggerCell({ priority, status, isError, isLoading, serverLabel }: TriggerCellProps) {
   const count = status?.triggers.get(priority) ?? 0;
   const details = status?.triggerDetails.get(priority) ?? [];
   const priorityInfo = PRIORITY_MAP[priority] || {
@@ -82,6 +83,7 @@ function TriggerCell({ priority, status, isError, isLoading }: TriggerCellProps)
       if (forceUpdateContent || !isVisible) {
         await emit('update-tooltip', {
           label: priorityInfo.label,
+          serverLabel,
           count,
           priorityLabel: priorityInfo.label,
           colorClass: priorityInfo.color,
