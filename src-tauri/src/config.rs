@@ -68,7 +68,6 @@ impl ConfigState {
     }
 }
 
-
 static CONFIG_PATH: OnceLock<PathBuf> = OnceLock::new();
 static CONFIG_DIR: OnceLock<PathBuf> = OnceLock::new();
 static INIT_ERROR: OnceLock<Option<String>> = OnceLock::new();

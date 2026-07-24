@@ -2,11 +2,16 @@ mod commands;
 mod config;
 mod zabbix;
 
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
 use tauri::generate_handler;
-use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
+
+static IS_ALWAYS_ON_TOP: AtomicBool = AtomicBool::new(false);
+static CURRENT_TRAY_STATE: Mutex<TrayMenuState> = Mutex::new(TrayMenuState::Normal);
 
 fn set_window_visibility(window: &tauri::WebviewWindow, visible: bool) -> Result<(), tauri::Error> {
     if visible {
@@ -30,9 +35,21 @@ pub(crate) fn set_tray_menu(
     app: &tauri::AppHandle,
     state: TrayMenuState,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+    if let Ok(mut guard) = CURRENT_TRAY_STATE.lock() {
+        *guard = state;
+    }
+
+    let is_always_on_top = IS_ALWAYS_ON_TOP.load(Ordering::SeqCst);
 
     let show_i = MenuItem::with_id(app, "show", "Show Window", true, None::<&str>)?;
+    let always_on_top_i = CheckMenuItem::with_id(
+        app,
+        "toggle_always_on_top",
+        "Always on Top",
+        true,
+        is_always_on_top,
+        None::<&str>,
+    )?;
     let settings_i = MenuItem::with_id(app, "settings", "Settings...", true, None::<&str>)?;
     let check_update_i =
         MenuItem::with_id(app, "check_update", "Check for Updates", true, None::<&str>)?;
@@ -44,7 +61,7 @@ pub(crate) fn set_tray_menu(
     let sep2 = PredefinedMenuItem::separator(app)?;
 
     let mut menu_items: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> =
-        vec![&show_i, &settings_i, &sep1];
+        vec![&show_i, &always_on_top_i, &settings_i, &sep1];
 
     match state {
         TrayMenuState::Normal => {
@@ -71,29 +88,8 @@ pub(crate) fn set_tray_menu(
 }
 
 fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    // Set up initial system tray menu items (Normal state)
-    let show_i = MenuItem::with_id(app, "show", "Show Window", true, None::<&str>)?;
-    let settings_i = MenuItem::with_id(app, "settings", "Settings...", true, None::<&str>)?;
-    let check_update_i =
-        MenuItem::with_id(app, "check_update", "Check for Updates", true, None::<&str>)?;
-    let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-
-    let menu = Menu::with_items(
-        app,
-        &[
-            &show_i,
-            &settings_i,
-            &PredefinedMenuItem::separator(app)?,
-            &check_update_i,
-            &PredefinedMenuItem::separator(app)?,
-            &quit_i,
-        ],
-    )?;
-
     // Build system tray icon
-    let mut tray_builder = TrayIconBuilder::with_id("main_tray")
-        .menu(&menu)
-        .show_menu_on_left_click(false);
+    let mut tray_builder = TrayIconBuilder::with_id("main_tray").show_menu_on_left_click(false);
 
     if let Some(icon) = app.default_window_icon().cloned() {
         tray_builder = tray_builder.icon(icon);
@@ -127,6 +123,20 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
                     let _ = set_window_visibility(&window, true);
                 }
             }
+            "toggle_always_on_top" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let current = IS_ALWAYS_ON_TOP.load(Ordering::SeqCst);
+                    let next = !current;
+                    if window.set_always_on_top(next).is_ok() {
+                        IS_ALWAYS_ON_TOP.store(next, Ordering::SeqCst);
+                        let current_tray_state = CURRENT_TRAY_STATE
+                            .lock()
+                            .map(|guard| *guard)
+                            .unwrap_or_else(|e| *e.into_inner());
+                        let _ = set_tray_menu(app, current_tray_state);
+                    }
+                }
+            }
             "settings" => {
                 if let Some(settings_win) = app.get_webview_window("settings") {
                     let _ = settings_win.show();
@@ -155,6 +165,8 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
         })
         .build(app)?;
 
+    set_tray_menu(app.handle(), TrayMenuState::Normal)?;
+
     Ok(())
 }
 
@@ -177,7 +189,10 @@ pub fn run() {
         log::error!("Failed to load config file: {}, using default", e);
         config::AppConfig::default()
     });
-    log::info!("Loaded config with {} servers", initial_config.servers.len());
+    log::info!(
+        "Loaded config with {} servers",
+        initial_config.servers.len()
+    );
     let config_state = config::ConfigState::new(initial_config);
 
     tauri::Builder::default()

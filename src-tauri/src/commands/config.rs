@@ -3,11 +3,12 @@ use tauri::Emitter;
 
 /// Returns the current cached application configuration from memory.
 #[tauri::command]
-pub async fn get_config(
-    state: tauri::State<'_, ConfigState>,
-) -> Result<AppConfig, String> {
+pub async fn get_config(state: tauri::State<'_, ConfigState>) -> Result<AppConfig, String> {
     let config = state.get();
-    log::debug!("Returned cached config with {} servers", config.servers.len());
+    log::debug!(
+        "Returned cached config with {} servers",
+        config.servers.len()
+    );
     Ok(config)
 }
 
