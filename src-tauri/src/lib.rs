@@ -37,6 +37,9 @@ pub(crate) fn set_tray_menu(
 ) -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(mut guard) = CURRENT_TRAY_STATE.lock() {
         *guard = state;
+    } else {
+        // Mutex was poisoned by a previous panic; tray state update skipped
+        log::warn!("CURRENT_TRAY_STATE mutex was poisoned; tray state not updated");
     }
 
     let is_always_on_top = IS_ALWAYS_ON_TOP.load(Ordering::SeqCst);
@@ -51,6 +54,8 @@ pub(crate) fn set_tray_menu(
         None::<&str>,
     )?;
     let settings_i = MenuItem::with_id(app, "settings", "Settings...", true, None::<&str>)?;
+    let about_i =
+        MenuItem::with_id(app, "about", "About", true, None::<&str>)?;
     let check_update_i =
         MenuItem::with_id(app, "check_update", "Check for Updates", true, None::<&str>)?;
     let install_update_i =
@@ -61,7 +66,7 @@ pub(crate) fn set_tray_menu(
     let sep2 = PredefinedMenuItem::separator(app)?;
 
     let mut menu_items: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> =
-        vec![&show_i, &always_on_top_i, &settings_i, &sep1];
+        vec![&show_i, &always_on_top_i, &sep1, &settings_i];
 
     match state {
         TrayMenuState::Normal => {
@@ -75,6 +80,7 @@ pub(crate) fn set_tray_menu(
         }
     }
 
+    menu_items.push(&about_i);
     menu_items.push(&sep2);
     menu_items.push(&quit_i);
 
@@ -141,6 +147,12 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
                 if let Some(settings_win) = app.get_webview_window("settings") {
                     let _ = settings_win.show();
                     let _ = settings_win.set_focus();
+                }
+            }
+            "about" => {
+                if let Some(about_win) = app.get_webview_window("about") {
+                    let _ = about_win.show();
+                    let _ = about_win.set_focus();
                 }
             }
             "check_update" => {
@@ -210,7 +222,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(
             tauri_plugin_window_state::Builder::default()
-                .with_denylist(&["settings", "tooltip", "update", "connection-edit"])
+                .with_denylist(&["settings", "tooltip", "update", "connection-edit", "about"])
                 .build(),
         )
         .on_window_event(|window, event| {

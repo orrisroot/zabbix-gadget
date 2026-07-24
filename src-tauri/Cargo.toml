@@ -6,6 +6,7 @@ authors = [
     "Yoshihiro OKUMURA <orrisroot@gmail.com>"
 ]
 license = "MIT"
+repository = "https://github.com/orrisroot/zabbix-gadget"
 edition = "2021"
 
 [lib]

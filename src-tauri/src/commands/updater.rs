@@ -117,6 +117,7 @@ pub fn relaunch_app(app_handle: tauri::AppHandle) {
     app_handle.restart();
 }
 
+
 #[cfg(test)]
 mod tests {
     use super::*;

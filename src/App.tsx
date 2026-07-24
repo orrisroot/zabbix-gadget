@@ -2,6 +2,7 @@ import { PhysicalPosition } from '@tauri-apps/api/dpi';
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { AlertCircle, Settings } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import AboutPanel from '@/components/AboutPanel';
 import ConnectionEditPanel from '@/components/ConnectionEditPanel';
 import Header from '@/components/Header';
 import SettingsPanel from '@/components/SettingsPanel';
@@ -22,12 +23,13 @@ function App() {
   const isUpdateWindow = typeof window !== 'undefined' && window.location.search.includes('window=update');
   const isConnectionEditWindow =
     typeof window !== 'undefined' && window.location.search.includes('window=connection-edit');
+  const isAboutWindow = typeof window !== 'undefined' && window.location.search.includes('window=about');
   const hasServers = config?.servers && config.servers.length > 0;
 
   const mainPosRef = useRef<PhysicalPosition | null>(null);
 
   useEffect(() => {
-    if (isSettingsWindow || isTooltipWindow || isUpdateWindow) return;
+    if (isSettingsWindow || isTooltipWindow || isUpdateWindow || isAboutWindow) return;
 
     let unlisten: (() => void) | null = null;
 
@@ -51,7 +53,7 @@ function App() {
         unlisten();
       }
     };
-  }, [isSettingsWindow, isTooltipWindow, isUpdateWindow]);
+  }, [isSettingsWindow, isTooltipWindow, isUpdateWindow, isAboutWindow]);
 
   const refreshInterval = config?.settings.refresh_interval_seconds ?? 300;
   const intervalMin = refreshInterval / 60;
@@ -101,7 +103,7 @@ function App() {
   }, [config?.settings.theme]);
 
   useWindowAutoResize({
-    enabled: !isSettingsWindow && !isTooltipWindow && !isUpdateWindow && !isConnectionEditWindow,
+    enabled: !isSettingsWindow && !isTooltipWindow && !isUpdateWindow && !isConnectionEditWindow && !isAboutWindow,
     servers: config?.servers,
     serverStatuses,
   });
@@ -135,6 +137,18 @@ function App() {
       }
     } catch (err) {
       console.error('Failed to show settings window:', err);
+    }
+  };
+
+  const handleAboutClick = async () => {
+    try {
+      const aboutWin = await WebviewWindow.getByLabel('about');
+      if (aboutWin) {
+        await aboutWin.show();
+        await aboutWin.setFocus();
+      }
+    } catch (err) {
+      console.error('Failed to show about window:', err);
     }
   };
 
@@ -198,11 +212,20 @@ function App() {
     );
   }
 
+  if (isAboutWindow) {
+    return (
+      <div className="window-base">
+        <AboutPanel />
+      </div>
+    );
+  }
+
   return (
     <div className="window-base app-container">
       <Header
         loading={loading}
         onSettingsClick={handleSettingsClick}
+        onAboutClick={handleAboutClick}
         theme={config?.settings.theme ?? 'system'}
         onThemeToggle={handleThemeToggle}
       />

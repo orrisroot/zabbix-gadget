@@ -1,6 +1,7 @@
 {
   "name": "zabbix-gadget",
   "version": "0.1.2",
+  "description": "A lightweight desktop status monitoring application for Zabbix servers.",
   "private": true,
   "license": "MIT",
   "author": "Yoshihiro OKUMURA <orrisroot@gmail.com>",
