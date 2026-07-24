@@ -193,7 +193,9 @@ mod tests {
 
         // Serializing back to TOML should include theme
         let serialized = toml::to_string_pretty(&config).unwrap();
-        assert!(serialized.contains("theme = 'system'") || serialized.contains("theme = \"system\""));
+        assert!(
+            serialized.contains("theme = 'system'") || serialized.contains("theme = \"system\"")
+        );
 
         // Deserializing with theme light
         let toml_with_light = r#"

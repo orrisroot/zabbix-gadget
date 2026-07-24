@@ -44,7 +44,7 @@ jobs:
             target: 'aarch64-pc-windows-msvc'
 
           # Linux x64
-          - platform: 'ubuntu-24.04'
+          - platform: 'ubuntu-22.04'
             args: ''
             target: ''
 
@@ -78,10 +78,20 @@ jobs:
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf rpm
 
       - name: Install frontend dependencies
         run: npm ci
+
+      - name: Custom Linux Build & AppImage Cleanup
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          npm run tauri build
+          rm -f src-tauri/target/release/bundle/appimage/*.AppDir/usr/lib/libwayland-*
+          curl -L -o appimagetool https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+          APPIMAGE_EXTRACT_AND_RUN=1 ARCH=x86_64 ./appimagetool src-tauri/target/release/bundle/appimage/*.AppDir src-tauri/target/release/bundle/appimage/zabbix-gadget_${{ github.ref_name }}_amd64.AppImage
+          rm -f appimagetool
 
       - name: Build and Publish
         uses: tauri-apps/tauri-action@v1
