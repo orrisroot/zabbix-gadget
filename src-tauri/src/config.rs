@@ -48,6 +48,27 @@ impl Default for AppConfig {
     }
 }
 
+/// Thread-safe in-memory cache of the application configuration.
+pub struct ConfigState(std::sync::RwLock<AppConfig>);
+
+impl ConfigState {
+    pub fn new(config: AppConfig) -> Self {
+        Self(std::sync::RwLock::new(config))
+    }
+
+    /// Get a cloned copy of the cached configuration, safely handling lock poisoning.
+    pub fn get(&self) -> AppConfig {
+        self.0.read().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+
+    /// Update the cached configuration, safely handling lock poisoning.
+    pub fn update(&self, new_config: AppConfig) {
+        let mut guard = self.0.write().unwrap_or_else(|e| e.into_inner());
+        *guard = new_config;
+    }
+}
+
+
 static CONFIG_PATH: OnceLock<PathBuf> = OnceLock::new();
 static CONFIG_DIR: OnceLock<PathBuf> = OnceLock::new();
 static INIT_ERROR: OnceLock<Option<String>> = OnceLock::new();

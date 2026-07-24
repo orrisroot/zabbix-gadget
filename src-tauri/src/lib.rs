@@ -173,8 +173,21 @@ pub fn run() {
         log::error!("Failed to initialize config: {}", e);
     }
 
+    let initial_config = config::load_config().unwrap_or_else(|e| {
+        log::error!("Failed to load config file: {}, using default", e);
+        config::AppConfig::default()
+    });
+    log::info!("Loaded config with {} servers", initial_config.servers.len());
+    let config_state = config::ConfigState::new(initial_config);
+
     tauri::Builder::default()
         .manage(zabbix::ZabbixSessionStore::default())
+        .manage(config_state)
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = set_window_visibility(&window, true);
+            }
+        }))
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())

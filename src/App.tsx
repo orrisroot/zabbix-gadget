@@ -1,5 +1,4 @@
 import { LogicalSize, PhysicalPosition } from '@tauri-apps/api/dpi';
-import { emit } from '@tauri-apps/api/event';
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { AlertCircle, Settings } from 'lucide-react';
 import { useEffect, useRef } from 'react';
@@ -196,7 +195,6 @@ function App() {
     };
     useZabbixStore.setState({ config: newConfig });
     await saveConfig(newConfig);
-    await emit('config-updated', newConfig);
   };
 
   if (isSettingsWindow) {

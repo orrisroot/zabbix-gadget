@@ -171,7 +171,6 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
       };
 
       await saveConfig(newConfig);
-      await emit('config-updated', newConfig);
       onClose();
     } catch (err) {
       console.error('Failed to save config:', err);

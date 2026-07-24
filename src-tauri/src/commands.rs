@@ -1,4 +1,4 @@
-use crate::config::{self, AppConfig, ServerConfig};
+use crate::config::{self, AppConfig, ConfigState, ServerConfig};
 use crate::zabbix::{ZabbixClient, ZabbixSessionStore, ZabbixTrigger};
 use serde::Serialize;
 use tauri::{Emitter, Manager};
@@ -13,16 +13,24 @@ pub struct TriggerResult {
 }
 
 #[tauri::command]
-pub async fn get_config() -> Result<AppConfig, String> {
-    let config = config::load_config().map_err(|e| e.to_string())?;
-    log::info!("Loaded config with {} servers", config.servers.len());
+pub async fn get_config(
+    state: tauri::State<'_, ConfigState>,
+) -> Result<AppConfig, String> {
+    let config = state.get();
+    log::debug!("Returned cached config with {} servers", config.servers.len());
     Ok(config)
 }
 
 #[tauri::command]
-pub async fn save_config(config: AppConfig) -> Result<(), String> {
+pub async fn save_config(
+    app: tauri::AppHandle,
+    config: AppConfig,
+    state: tauri::State<'_, ConfigState>,
+) -> Result<(), String> {
     config::save_config(&config).map_err(|e| e.to_string())?;
+    state.update(config.clone());
     log::info!("Saved config with {} servers", config.servers.len());
+    let _ = app.emit("config-updated", &config);
     Ok(())
 }
 

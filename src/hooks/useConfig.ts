@@ -11,10 +11,7 @@ export function useConfig() {
   const [isVisible, setIsVisible] = useState<boolean>(true);
 
   // Check if current window is the main window
-  const isMainWindow =
-    typeof window !== 'undefined' &&
-    !window.location.search.includes('window=settings') &&
-    !window.location.search.includes('window=tooltip');
+  const isMainWindow = typeof window !== 'undefined' && !new URLSearchParams(window.location.search).has('window');
 
   useEffect(() => {
     const loadAndSetConfig = async () => {
@@ -26,9 +23,8 @@ export function useConfig() {
         console.error('Failed to load config:', e);
       }
     };
-    loadAndSetConfig();
 
-    // Fetch initial visibility state dynamically
+    // Fetch initial visibility state dynamically for main window
     const checkInitialVisibility = async () => {
       try {
         const appWindow = getCurrentWebviewWindow();
@@ -39,11 +35,14 @@ export function useConfig() {
       }
     };
 
+    // Load configuration from in-memory cache on mount for all windows
+    loadAndSetConfig();
+
     if (isMainWindow) {
       checkInitialVisibility();
     }
 
-    // Listen for configuration updates from the settings window
+    // Listen for configuration updates from the settings window or backend
     const unlistenConfigPromise = listen<AppConfig>('config-updated', (event) => {
       console.log('useConfig: configuration updated');
       useZabbixStore.setState({ config: event.payload });
