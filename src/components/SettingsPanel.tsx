@@ -1,6 +1,16 @@
 import { emit, listen } from '@tauri-apps/api/event';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { ChevronDown, Plus, Server as ServerIcon, Settings as SettingsIcon, Sliders } from 'lucide-react';
+import {
+  ChevronDown,
+  Monitor,
+  Moon,
+  Palette,
+  Plus,
+  Server as ServerIcon,
+  Settings as SettingsIcon,
+  Sliders,
+  Sun,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import PanelHeader from '@/components/PanelHeader';
 import SettingsServerItem from '@/components/SettingsServerItem';
@@ -18,7 +28,9 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
   const { config } = useZabbixStore();
   const [servers, setServers] = useState<ServerConfig[]>(config?.servers ?? []);
   const [refreshInterval, setRefreshInterval] = useState<number>(config?.settings.refresh_interval_seconds ?? 300);
+  const [theme, setTheme] = useState<'system' | 'dark' | 'light'>(config?.settings.theme ?? 'system');
   const [isIntervalOpen, setIsIntervalOpen] = useState(false);
+  const [isThemeOpen, setIsThemeOpen] = useState(false);
 
   // Drag and drop states
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -34,6 +46,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     if (config) {
       setServers(config.servers);
       setRefreshInterval(config.settings.refresh_interval_seconds);
+      setTheme(config.settings.theme ?? 'system');
     }
   }, [config]);
 
@@ -43,6 +56,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
       if (document.visibilityState === 'visible' && config) {
         setServers(config.servers);
         setRefreshInterval(config.settings.refresh_interval_seconds);
+        setTheme(config.settings.theme ?? 'system');
       }
     };
 
@@ -167,6 +181,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
         settings: {
           ...config.settings,
           refresh_interval_seconds: refreshInterval,
+          theme,
         },
       };
 
@@ -182,6 +197,7 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
       if (config) {
         setServers(config.servers);
         setRefreshInterval(config.settings.refresh_interval_seconds);
+        setTheme(config.settings.theme ?? 'system');
       }
       await hideWindow();
       onClose();
@@ -197,8 +213,15 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
     { value: 600, label: '10 Minutes' },
   ];
 
+  const themeOptions: { value: 'system' | 'dark' | 'light'; label: string; icon: React.ReactNode }[] = [
+    { value: 'system', label: 'System Theme', icon: <Monitor size={14} /> },
+    { value: 'dark', label: 'Dark Mode', icon: <Moon size={14} /> },
+    { value: 'light', label: 'Light Mode', icon: <Sun size={14} /> },
+  ];
+
   const activeIntervalLabel =
     intervalOptions.find((opt) => opt.value === refreshInterval)?.label || `${refreshInterval} Seconds`;
+  const activeThemeOption = themeOptions.find((opt) => opt.value === theme) ?? themeOptions[0];
 
   return (
     <div className="settings-panel-wrapper">
@@ -246,43 +269,100 @@ function SettingsPanel({ onClose }: SettingsPanelProps) {
           </ul>
         </div>
 
-        {/* Section 3: General Settings */}
-        <div className="settings-section">
-          <div className="settings-section-top">
-            <div className="flex-items-center-gap2">
-              <Sliders size={14} className="icon-muted" />
-              <span className="settings-section-subtitle">Refresh Interval</span>
+        {/* Section 2: General Settings (Theme & Refresh Interval) */}
+        <div className="grid grid-cols-2 gap-3 flex-shrink-0">
+          <div className="settings-section">
+            <div className="settings-section-top">
+              <div className="flex-items-center-gap2">
+                <Palette size={14} className="icon-muted" />
+                <span className="settings-section-subtitle">Theme</span>
+              </div>
+            </div>
+            <div className="settings-select-container">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsThemeOpen(!isThemeOpen);
+                  setIsIntervalOpen(false);
+                }}
+                className="settings-select-btn"
+              >
+                <div className="flex items-center gap-2 overflow-hidden">
+                  {activeThemeOption.icon}
+                  <span className="truncate">{activeThemeOption.label}</span>
+                </div>
+                <ChevronDown
+                  size={14}
+                  className={`icon-muted transition-transform flex-shrink-0 ${isThemeOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {isThemeOpen && (
+                <div className="settings-dropdown">
+                  {themeOptions.map((opt) => (
+                    <button
+                      type="button"
+                      key={opt.value}
+                      onClick={() => {
+                        setTheme(opt.value);
+                        setIsThemeOpen(false);
+                      }}
+                      className={`settings-dropdown-item flex items-center gap-2 ${
+                        theme === opt.value ? 'settings-dropdown-item-active' : 'settings-dropdown-item-inactive'
+                      }`}
+                    >
+                      {opt.icon}
+                      <span>{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-          <div className="settings-select-container">
-            <button type="button" onClick={() => setIsIntervalOpen(!isIntervalOpen)} className="settings-select-btn">
-              <span>{activeIntervalLabel}</span>
-              <ChevronDown
-                size={14}
-                className={`icon-muted transition-transform ${isIntervalOpen ? 'rotate-180' : ''}`}
-              />
-            </button>
-            {isIntervalOpen && (
-              <div className="settings-dropdown">
-                {intervalOptions.map((opt) => (
-                  <button
-                    type="button"
-                    key={opt.value}
-                    onClick={() => {
-                      setRefreshInterval(opt.value);
-                      setIsIntervalOpen(false);
-                    }}
-                    className={`settings-dropdown-item ${
-                      refreshInterval === opt.value
-                        ? 'settings-dropdown-item-active'
-                        : 'settings-dropdown-item-inactive'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+
+          <div className="settings-section">
+            <div className="settings-section-top">
+              <div className="flex-items-center-gap2">
+                <Sliders size={14} className="icon-muted" />
+                <span className="settings-section-subtitle">Refresh Interval</span>
               </div>
-            )}
+            </div>
+            <div className="settings-select-container">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsIntervalOpen(!isIntervalOpen);
+                  setIsThemeOpen(false);
+                }}
+                className="settings-select-btn"
+              >
+                <span>{activeIntervalLabel}</span>
+                <ChevronDown
+                  size={14}
+                  className={`icon-muted transition-transform flex-shrink-0 ${isIntervalOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {isIntervalOpen && (
+                <div className="settings-dropdown">
+                  {intervalOptions.map((opt) => (
+                    <button
+                      type="button"
+                      key={opt.value}
+                      onClick={() => {
+                        setRefreshInterval(opt.value);
+                        setIsIntervalOpen(false);
+                      }}
+                      className={`settings-dropdown-item ${
+                        refreshInterval === opt.value
+                          ? 'settings-dropdown-item-active'
+                          : 'settings-dropdown-item-inactive'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
