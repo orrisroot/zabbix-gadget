@@ -14,10 +14,21 @@ if [ "$1" = "build" ]; then
     rm -f "$APPDIR_PATH"/usr/lib/libwayland-*
 
     if [ -n "$APPIMAGE_PATH" ]; then
-      echo "Repackaging AppImage using appimagetool..."
-      curl -L -o appimagetool https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+      ARCH=$(uname -m)
+      if [ "$ARCH" = "x86_64" ]; then
+        APPIMAGETOOL_URL="https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
+      elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+        ARCH="aarch64"
+        APPIMAGETOOL_URL="https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-aarch64.AppImage"
+      else
+        echo "Unsupported architecture for appimagetool: $ARCH"
+        exit 1
+      fi
+
+      echo "Repackaging AppImage using appimagetool ($ARCH)..."
+      curl -L -o appimagetool "$APPIMAGETOOL_URL"
       chmod +x appimagetool
-      APPIMAGE_EXTRACT_AND_RUN=1 ARCH=x86_64 ./appimagetool "$APPDIR_PATH" "$APPIMAGE_PATH"
+      APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$ARCH" ./appimagetool "$APPDIR_PATH" "$APPIMAGE_PATH"
       rm -f appimagetool
       echo "AppImage repackaging complete."
     fi
