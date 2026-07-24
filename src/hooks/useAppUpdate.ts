@@ -7,7 +7,9 @@ export type UpdateStatus = 'checking' | 'available' | 'no-update' | 'downloading
 interface UpdateCheckResult {
   status: 'noUpdate' | 'available' | 'error';
   currentVersion?: string;
+  current_version?: string;
   newVersion?: string;
+  new_version?: string;
   body?: string;
   message?: string;
 }
@@ -38,8 +40,8 @@ export function useAppUpdate() {
       const result = await invoke<UpdateCheckResult>('check_for_update');
       if (result.status === 'available') {
         setStatus('available');
-        setCurrentVersion(result.currentVersion || '');
-        setNewVersion(result.newVersion || '');
+        setCurrentVersion(result.currentVersion || result.current_version || '');
+        setNewVersion(result.newVersion || result.new_version || '');
         setChangelog(result.body || '');
       } else if (result.status === 'noUpdate') {
         setStatus('no-update');

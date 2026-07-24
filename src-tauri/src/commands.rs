@@ -184,6 +184,7 @@ pub fn close_app(app_handle: tauri::AppHandle) {
 #[serde(tag = "status", rename_all = "camelCase")]
 pub enum UpdateCheckResult {
     NoUpdate,
+    #[serde(rename_all = "camelCase")]
     Available {
         current_version: String,
         new_version: String,
@@ -254,9 +255,15 @@ pub async fn install_update(app_handle: tauri::AppHandle) -> Result<(), String> 
 
                 let progress_app = app_handle.clone();
                 let mut downloaded = 0;
+                let mut last_total_len: Option<u64> = None;
+
                 if let Err(e) = update
                     .download_and_install(
                         move |chunk_len, total_len| {
+                            if total_len != last_total_len {
+                                last_total_len = total_len;
+                                downloaded = 0;
+                            }
                             downloaded += chunk_len;
                             let _ = progress_app.emit(
                                 "update-progress",
@@ -288,4 +295,20 @@ pub async fn install_update(app_handle: tauri::AppHandle) -> Result<(), String> 
 #[tauri::command]
 pub fn relaunch_app(app_handle: tauri::AppHandle) {
     app_handle.restart();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_update_check_result_serialization() {
+        let res = UpdateCheckResult::Available {
+            current_version: "0.1.2".to_string(),
+            new_version: "0.1.3".to_string(),
+            body: Some("Release notes".to_string()),
+        };
+        let json = serde_json::to_string(&res).unwrap();
+        println!("SERDE_JSON_OUTPUT: {}", json);
+    }
 }

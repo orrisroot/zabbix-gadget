@@ -62,10 +62,8 @@ function UpdatePanel() {
             onClick={() => {
               setStatus('available');
               setCurrentVersion('0.1.2');
-              setNewVersion('1.2.0');
-              setChangelog(
-                '• Added new dark mode themes.\n• Fixed memory leak in tray icon render loop.\n• Improved performance on Linux MATE environment.',
-              );
+              setNewVersion('0.1.3');
+              setChangelog('See the assets to download this version and install.');
             }}
             className="update-debug-btn"
           >
@@ -75,7 +73,7 @@ function UpdatePanel() {
             type="button"
             onClick={() => {
               setStatus('downloading');
-              setDownloadProgress({ downloaded: 6500000, total: 10000000 });
+              setDownloadProgress({ downloaded: 0, total: 10000000 });
             }}
             className="update-debug-btn"
           >
@@ -85,7 +83,7 @@ function UpdatePanel() {
             type="button"
             onClick={() => {
               setStatus('relaunch-pending');
-              setNewVersion('1.2.0');
+              setNewVersion('0.1.3');
             }}
             className="update-debug-btn"
           >
