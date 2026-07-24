@@ -6,7 +6,7 @@ import { useTauriWindow } from '@/hooks/useTauriWindow';
 import { loginServer } from '@/lib/zabbix-api';
 import type { ServerConfig } from '@/types/config';
 
-function ConnectionEditPanel() {
+export function ConnectionEditPanel() {
   const { hideWindow } = useTauriWindow();
 
   // Index and Form states

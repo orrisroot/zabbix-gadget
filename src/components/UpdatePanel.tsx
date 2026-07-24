@@ -3,7 +3,7 @@ import PanelHeader from '@/components/PanelHeader';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { useTauriWindow } from '@/hooks/useTauriWindow';
 
-function UpdatePanel() {
+export function UpdatePanel() {
   const { hideWindow } = useTauriWindow();
   const {
     status,
@@ -130,7 +130,9 @@ function UpdatePanel() {
               <CheckCircle2 className="update-success-icon" />
               <div>
                 <h3 className="update-title-highlight">You are up to date!</h3>
-                <p className="update-desc-highlight">Zabbix Gadget is currently at the latest version.</p>
+                <p className="update-desc-highlight">
+                  Zabbix Gadget {currentVersion ? `v${currentVersion}` : ''} is currently at the latest version.
+                </p>
               </div>
             </div>
           )}

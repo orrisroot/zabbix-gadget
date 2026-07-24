@@ -37,10 +37,15 @@ export function useAppUpdate() {
     setDownloadProgress({ downloaded: 0, total: null });
 
     try {
+      const ver = await invoke<string>('get_app_version').catch(() => '');
+      if (ver) setCurrentVersion(ver);
+
       const result = await invoke<UpdateCheckResult>('check_for_update');
       if (result.status === 'available') {
         setStatus('available');
-        setCurrentVersion(result.currentVersion || result.current_version || '');
+        if (result.currentVersion || result.current_version) {
+          setCurrentVersion(result.currentVersion || result.current_version || '');
+        }
         setNewVersion(result.newVersion || result.new_version || '');
         setChangelog(result.body || '');
       } else if (result.status === 'noUpdate') {

@@ -1,16 +1,17 @@
 import { invoke } from '@tauri-apps/api/core';
-import { Activity, Monitor, Moon, RefreshCw, Settings, Sun, X } from 'lucide-react';
+import { Activity, Info, Monitor, Moon, RefreshCw, Settings, Sun, X } from 'lucide-react';
 import { useTauriWindow } from '@/hooks/useTauriWindow';
 import { useZabbixStore } from '@/hooks/useZabbix';
 
 interface HeaderProps {
   loading: boolean;
   onSettingsClick: () => void;
+  onAboutClick?: () => void;
   theme: 'dark' | 'light' | 'system';
   onThemeToggle: () => void;
 }
 
-function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps) {
+export function Header({ loading, onSettingsClick, onAboutClick, theme, onThemeToggle }: HeaderProps) {
   const { refreshAll } = useZabbixStore();
   const { handleMouseDown, closeWindow } = useTauriWindow();
 
@@ -73,6 +74,19 @@ function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps)
         >
           <Settings size={13} />
         </button>
+        {onAboutClick && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAboutClick();
+            }}
+            className="btn-icon"
+            title="About"
+          >
+            <Info size={13} />
+          </button>
+        )}
         <button
           type="button"
           onClick={(e) => {

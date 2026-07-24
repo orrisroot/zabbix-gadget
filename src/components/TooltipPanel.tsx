@@ -13,7 +13,7 @@ interface TooltipData {
   details: ZabbixTrigger[];
 }
 
-function TooltipPanel() {
+export function TooltipPanel() {
   const [data, setData] = useState<TooltipData | null>(null);
   const hideTimeoutRef = useRef<number | null>(null);
 

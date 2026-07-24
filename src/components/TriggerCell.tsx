@@ -15,7 +15,7 @@ interface TriggerCellProps {
   serverLabel: string;
 }
 
-function TriggerCell({ priority, status, isError, isLoading, serverLabel }: TriggerCellProps) {
+export function TriggerCell({ priority, status, isError, isLoading, serverLabel }: TriggerCellProps) {
   const count = status?.triggers.get(priority) ?? 0;
   const details = status?.triggerDetails.get(priority) ?? [];
   const priorityInfo = PRIORITY_MAP[priority] || {
