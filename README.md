@@ -61,7 +61,7 @@ basic_auth_pass = "proxy_pass"
 
 [settings]
 refresh_interval_seconds = 300
-theme = "dark" # Visual theme: "dark" (default) or "light"
+theme = "system" # Visual theme: "system" (default), "dark", or "light"
 ```
 
 See [config/zabbix.toml.example](config/zabbix.toml.example) for a template.

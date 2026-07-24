@@ -59,28 +59,44 @@ function App() {
 
   // Apply theme to document and Tauri window
   useEffect(() => {
-    const theme = config?.settings.theme ?? 'dark';
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
-      document.body.classList.add('dark');
-      document.body.classList.remove('light');
-    } else {
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
-      document.body.classList.add('light');
-      document.body.classList.remove('dark');
-    }
+    const theme = config?.settings.theme ?? 'system';
 
-    try {
-      const appWin = getCurrentWebviewWindow();
-      if (appWin && typeof appWin.setTheme === 'function') {
-        appWin.setTheme(theme).catch((err) => {
-          console.warn('Failed to set Tauri window theme:', err);
-        });
+    const applyTheme = () => {
+      const isDark =
+        theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        document.body.classList.add('dark');
+        document.body.classList.remove('light');
+      } else {
+        document.documentElement.classList.add('light');
+        document.documentElement.classList.remove('dark');
+        document.body.classList.add('light');
+        document.body.classList.remove('dark');
       }
-    } catch (err) {
-      console.error('Failed to get app window for theme updates:', err);
+
+      try {
+        const appWin = getCurrentWebviewWindow();
+        if (appWin && typeof appWin.setTheme === 'function') {
+          const tauriTheme = theme === 'system' ? null : theme;
+          appWin.setTheme(tauriTheme).catch((err) => {
+            console.warn('Failed to set Tauri window theme:', err);
+          });
+        }
+      } catch (err) {
+        console.error('Failed to get app window for theme updates:', err);
+      }
+    };
+
+    applyTheme();
+
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = () => applyTheme();
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
     }
   }, [config?.settings.theme]);
 
@@ -164,7 +180,13 @@ function App() {
 
   const handleThemeToggle = async () => {
     if (!config) return;
-    const newTheme: 'dark' | 'light' = config.settings.theme === 'dark' ? 'light' : 'dark';
+    const currentTheme = config.settings.theme ?? 'system';
+    const themeCycle: Record<'system' | 'dark' | 'light', 'system' | 'dark' | 'light'> = {
+      system: 'dark',
+      dark: 'light',
+      light: 'system',
+    };
+    const newTheme = themeCycle[currentTheme] ?? 'system';
     const newConfig = {
       ...config,
       settings: {
@@ -222,7 +244,7 @@ function App() {
       <Header
         loading={loading}
         onSettingsClick={handleSettingsClick}
-        theme={config?.settings.theme ?? 'dark'}
+        theme={config?.settings.theme ?? 'system'}
         onThemeToggle={handleThemeToggle}
       />
       <main className={`app-main scrollbar-thin ${!hasServers ? 'app-main-empty' : ''}`}>

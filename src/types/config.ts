@@ -10,7 +10,7 @@ export interface ServerConfig {
 
 export interface AppSettings {
   refresh_interval_seconds: number;
-  theme: 'dark' | 'light';
+  theme: 'dark' | 'light' | 'system';
 }
 
 export interface AppConfig {

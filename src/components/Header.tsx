@@ -1,12 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
-import { Activity, Moon, RefreshCw, Settings, Sun, X } from 'lucide-react';
+import { Activity, Monitor, Moon, RefreshCw, Settings, Sun, X } from 'lucide-react';
 import { useTauriWindow } from '@/hooks/useTauriWindow';
 import { useZabbixStore } from '@/hooks/useZabbix';
 
 interface HeaderProps {
   loading: boolean;
   onSettingsClick: () => void;
-  theme: 'dark' | 'light';
+  theme: 'dark' | 'light' | 'system';
   onThemeToggle: () => void;
 }
 
@@ -23,6 +23,27 @@ function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps)
     }
   };
 
+  const getThemeInfo = () => {
+    if (theme === 'system') {
+      return {
+        icon: <Monitor size={13} />,
+        title: 'Theme: System (Switch to Dark Mode)',
+      };
+    }
+    if (theme === 'dark') {
+      return {
+        icon: <Moon size={13} />,
+        title: 'Theme: Dark (Switch to Light Mode)',
+      };
+    }
+    return {
+      icon: <Sun size={13} />,
+      title: 'Theme: Light (Switch to System Mode)',
+    };
+  };
+
+  const themeInfo = getThemeInfo();
+
   return (
     <header role="toolbar" className="app-header w-full" onMouseDown={handleMouseDown}>
       <div className="header-title-container">
@@ -37,9 +58,9 @@ function Header({ loading, onSettingsClick, theme, onThemeToggle }: HeaderProps)
             onThemeToggle();
           }}
           className="btn-icon"
-          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          title={themeInfo.title}
         >
-          {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
+          {themeInfo.icon}
         </button>
         <button
           type="button"

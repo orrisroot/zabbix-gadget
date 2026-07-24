@@ -27,7 +27,7 @@ pub struct AppSettings {
 }
 
 fn default_theme() -> String {
-    "dark".to_string()
+    "system".to_string()
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -42,7 +42,7 @@ impl Default for AppConfig {
             servers: vec![],
             settings: AppSettings {
                 refresh_interval_seconds: 300,
-                theme: "dark".to_string(),
+                theme: "system".to_string(),
             },
         }
     }
@@ -186,14 +186,14 @@ mod tests {
             refresh_interval_seconds = 120
         "#;
 
-        // Deserializing TOML without theme should default to "dark"
+        // Deserializing TOML without theme should default to "system"
         let config: AppConfig = toml::from_str(toml_content).unwrap();
-        assert_eq!(config.settings.theme, "dark");
+        assert_eq!(config.settings.theme, "system");
         assert_eq!(config.settings.refresh_interval_seconds, 120);
 
         // Serializing back to TOML should include theme
         let serialized = toml::to_string_pretty(&config).unwrap();
-        assert!(serialized.contains("theme = 'dark'") || serialized.contains("theme = \"dark\""));
+        assert!(serialized.contains("theme = 'system'") || serialized.contains("theme = \"system\""));
 
         // Deserializing with theme light
         let toml_with_light = r#"
