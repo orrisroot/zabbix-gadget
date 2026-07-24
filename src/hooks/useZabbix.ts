@@ -49,7 +49,7 @@ export const useZabbixStore = create<ZabbixStore>((set, get) => ({
 
   refreshServer: async (server: ServerConfig) => {
     try {
-      const result = await fetchTriggers(server);
+      const result = await fetchTriggers(server.label);
 
       const triggers = new Map<string, number>();
       const triggerDetails = new Map<string, TriggerResult['triggers']>();

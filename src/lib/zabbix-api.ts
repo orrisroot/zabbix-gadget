@@ -18,6 +18,6 @@ export async function loginServer(server: ServerConfig): Promise<boolean> {
   return invoke<boolean>('login', { server });
 }
 
-export async function fetchTriggers(server: ServerConfig): Promise<TriggerResult> {
-  return invoke<TriggerResult>('fetch_triggers', { server });
+export async function fetchTriggers(serverLabel: string): Promise<TriggerResult> {
+  return invoke<TriggerResult>('fetch_triggers', { serverLabel });
 }

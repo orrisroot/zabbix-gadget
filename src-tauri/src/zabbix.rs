@@ -1,3 +1,4 @@
+use crate::config::ServerConfig;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -218,5 +219,96 @@ impl ZabbixClient {
 
 #[derive(Default)]
 pub struct ZabbixSessionStore {
-    pub tokens: std::sync::Mutex<std::collections::HashMap<String, String>>,
+    /// Thread-safe in-memory cache mapping server labels to active authentication tokens.
+    tokens: std::sync::Mutex<std::collections::HashMap<String, String>>,
+}
+
+impl ZabbixSessionStore {
+    /// Retrieves a cached authentication token for the given server label.
+    pub fn get_token(&self, label: &str) -> Option<String> {
+        let tokens = self.tokens.lock().unwrap_or_else(|e| e.into_inner());
+        tokens.get(label).cloned()
+    }
+
+    /// Caches an authentication token for the given server label.
+    pub fn set_token(&self, label: &str, token: String) {
+        let mut tokens = self.tokens.lock().unwrap_or_else(|e| e.into_inner());
+        tokens.insert(label.to_string(), token);
+    }
+
+    /// Removes a cached authentication token for the given server label.
+    pub fn remove_token(&self, label: &str) {
+        let mut tokens = self.tokens.lock().unwrap_or_else(|e| e.into_inner());
+        tokens.remove(label);
+    }
+
+    /// Attempts to log into the specified Zabbix server and caches the session token upon success.
+    pub async fn login_server(&self, server: &ServerConfig) -> Result<bool, String> {
+        let mut client = ZabbixClient::new(
+            &server.host,
+            &server.user,
+            &server.pass,
+            server.api_key.clone(),
+            server.basic_auth_user.clone(),
+            server.basic_auth_pass.clone(),
+        );
+        match client.login().await {
+            Ok(_) => {
+                if let Some(ref token) = client.auth_token {
+                    self.set_token(&server.label, token.clone());
+                }
+                Ok(true)
+            }
+            Err(e) => Err(e.to_string()),
+        }
+    }
+
+    pub async fn fetch_triggers_with_retry(
+        &self,
+        server: &ServerConfig,
+    ) -> Result<Vec<ZabbixTrigger>, String> {
+        let mut client = ZabbixClient::new(
+            &server.host,
+            &server.user,
+            &server.pass,
+            server.api_key.clone(),
+            server.basic_auth_user.clone(),
+            server.basic_auth_pass.clone(),
+        );
+
+        if let Some(token) = self.get_token(&server.label) {
+            client.auth_token = Some(token);
+        } else {
+            client.login().await.map_err(|e| e.to_string())?;
+            if let Some(ref token) = client.auth_token {
+                self.set_token(&server.label, token.clone());
+            }
+        }
+
+        match client.get_triggers().await.map_err(|e| e.to_string()) {
+            Ok(triggers) => Ok(triggers),
+            Err(err_msg) => {
+                log::warn!(
+                    "Failed to fetch triggers with cached token for {}: {}. Retrying login...",
+                    server.label,
+                    err_msg
+                );
+
+                self.remove_token(&server.label);
+                client.auth_token = None;
+
+                client.login().await.map_err(|login_err| {
+                    format!("Login failed after token invalidation: {}", login_err)
+                })?;
+
+                if let Some(ref token) = client.auth_token {
+                    self.set_token(&server.label, token.clone());
+                }
+
+                client.get_triggers().await.map_err(|retry_err| {
+                    format!("Failed to fetch triggers after login retry: {}", retry_err)
+                })
+            }
+        }
+    }
 }
