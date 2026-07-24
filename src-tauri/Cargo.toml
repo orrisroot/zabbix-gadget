@@ -1,6 +1,6 @@
 [package]
 name = "zabbix-gadget"
-version = "0.1.2"
+version = "0.1.3"
 description = "Zabbix Desktop Gadget"
 authors = [
     "Yoshihiro OKUMURA <orrisroot@gmail.com>"

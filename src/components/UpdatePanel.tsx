@@ -51,7 +51,7 @@ export function UpdatePanel() {
             type="button"
             onClick={() => {
               setStatus('no-update');
-              setCurrentVersion('0.1.2');
+              setCurrentVersion('0.1.3');
             }}
             className="update-debug-btn"
           >
@@ -61,8 +61,8 @@ export function UpdatePanel() {
             type="button"
             onClick={() => {
               setStatus('available');
-              setCurrentVersion('0.1.2');
-              setNewVersion('0.1.3');
+              setCurrentVersion('0.1.3');
+              setNewVersion('0.1.4');
               setChangelog('See the assets to download this version and install.');
             }}
             className="update-debug-btn"
@@ -149,7 +149,7 @@ export function UpdatePanel() {
                     <span className="update-badge-version">v{newVersion}</span>
                   </h3>
                   <p className="update-available-desc">
-                    A new version is ready to install (current: v{currentVersion || '0.1.2'}).
+                    A new version is ready to install (current: v{currentVersion || '0.1.3'}).
                   </p>
                 </div>
               </div>

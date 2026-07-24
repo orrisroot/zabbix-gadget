@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-07-25
+
+### Added
+- **Theme Selection**: Add visual theme selection (System, Dark, Light) in settings UI, defaulting to System theme mode.
+- **About Window**: Add an independent "About" window accessible from the main UI.
+- **Always-on-Top & Modals**: Enforce always-on-top behavior for modal dialogs and support toggling visibility via system tray.
+- **Server Name in Tooltip**: Display target server label in the hover tooltip footer.
+
+### Changed
+- **UI Consistency**: Standardize panel headers and window styling across modal dialogs.
+- **IPC & Architecture**: Modularize backend command structure, strengthen IPC boundary security, optimize configuration caching, and prevent duplicate application launches.
+
+### Fixed
+- **Linux Graphics Compatibility**: Work around `EGL_BAD_PARAMETER` error on Linux systems with Intel iGPUs.
+- **Updater Status Handling**: Fix update check result parsing, download progress calculation, and display current app version in status messages.
+
 ## [0.1.2] - 2026-07-22
 
 ### Added
