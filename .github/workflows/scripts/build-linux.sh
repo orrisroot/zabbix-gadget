@@ -31,6 +31,11 @@ if [ "$1" = "build" ]; then
       APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$ARCH" ./appimagetool "$APPDIR_PATH" "$APPIMAGE_PATH"
       rm -f appimagetool
       echo "AppImage repackaging complete."
+
+      if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+        echo "Re-signing repackaged AppImage..."
+        npx tauri signer sign "$APPIMAGE_PATH"
+      fi
     fi
   fi
 fi
