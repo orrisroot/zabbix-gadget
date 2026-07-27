@@ -165,7 +165,7 @@ export function ConnectionEditPanel() {
       />
 
       <ScrollArea className="settings-form-content" role="main">
-        <div className="p-4 flex flex-col gap-2">
+        <div className="settings-form-inner">
           {/* Connection Label */}
           <div className="settings-form-group">
             <span className="settings-form-label">Label</span>
@@ -180,7 +180,7 @@ export function ConnectionEditPanel() {
           {/* Host URL */}
           <div className="settings-form-group">
             <span className="settings-form-label">Host URL</span>
-            <div className="relative group">
+            <div className="settings-input-group group">
               <input
                 placeholder="https://zabbix.example.com"
                 value={formHost}

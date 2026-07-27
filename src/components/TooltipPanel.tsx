@@ -102,7 +102,12 @@ export function TooltipPanel() {
   const statusBgColor = getBubbleClass(data.details[0]?.priority);
 
   return (
-    <div role="tooltip" className="window-base p-3" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div
+      role="tooltip"
+      className="window-base tooltip-window-inner"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <div className="tooltip-header">
         <div className="tooltip-header-left">
           <span className={`tooltip-status-bubble ${statusBgColor}`} />

@@ -139,7 +139,7 @@ export function UpdatePanel() {
           )}
 
           {status === 'available' && (
-            <div className="flex flex-col gap-2.5">
+            <div className="update-available-content">
               <div className="update-available-info-container">
                 <div className="update-download-icon-container">
                   <Download size={18} />
@@ -172,7 +172,7 @@ export function UpdatePanel() {
             <div className="update-downloading-container">
               <div className="update-downloading-header">
                 <span className="update-downloading-label">
-                  <Loader2 size={12} className="icon-spin text-indigo-500" />
+                  <Loader2 size={12} className="icon-spin update-spinner-icon" />
                   Downloading update...
                 </span>
                 <span className="update-downloading-bytes">

@@ -38,7 +38,7 @@ export function PanelHeader({
       return (
         <button
           type="button"
-          className={`panel-header-title-container bg-transparent border-none p-0 outline-none text-left ${titleClassName}`}
+          className={`panel-header-title-container panel-header-title-btn ${titleClassName}`}
           onMouseDown={(e) => {
             // Prevent dragging from title click
             e.stopPropagation();

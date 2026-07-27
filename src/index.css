@@ -90,6 +90,10 @@
     @apply flex-1 overflow-hidden p-4;
   }
 
+  .panel-header-title-btn {
+    @apply bg-transparent border-none p-0 outline-none text-left;
+  }
+
   .window-transparent-wrapper {
     @apply h-full w-full bg-transparent select-none overflow-hidden flex flex-col;
   }
@@ -339,6 +343,34 @@
     @apply text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400;
   }
 
+  .settings-btn-add {
+    @apply flex items-center justify-center gap-1 px-2 py-1 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-md cursor-pointer transition-all active:scale-[0.98] disabled:opacity-50 shadow-none;
+  }
+
+  .settings-server-list-inner {
+    @apply flex flex-col gap-1 pb-px;
+  }
+
+  .settings-grid-2col {
+    @apply grid grid-cols-2 gap-3 flex-shrink-0;
+  }
+
+  .settings-dropdown-item-icon {
+    @apply flex items-center gap-2 overflow-hidden;
+  }
+
+  .settings-chevron {
+    @apply transition-transform flex-shrink-0;
+  }
+
+  .settings-form-inner {
+    @apply p-4 flex flex-col gap-2;
+  }
+
+  .settings-input-group {
+    @apply relative;
+  }
+
   .settings-auth-tabs {
     @apply flex gap-2 bg-slate-200/55 dark:bg-slate-900/55 p-0.5 rounded border border-slate-300/40 dark:border-slate-800/40;
   }
@@ -550,6 +582,10 @@
     @apply bg-slate-700;
   }
 
+  .tooltip-window-inner {
+    @apply p-3;
+  }
+
   /* -------------------------------------
      Update Window
   -------------------------------------- */
@@ -675,6 +711,14 @@
 
   .update-error-desc {
     @apply text-xxs text-rose-600 dark:text-rose-400 mt-2 leading-relaxed break-words text-center;
+  }
+
+  .update-available-content {
+    @apply flex flex-col gap-2.5;
+  }
+
+  .update-spinner-icon {
+    @apply text-indigo-500;
   }
 
   /* -------------------------------------

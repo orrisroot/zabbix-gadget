@@ -45,7 +45,7 @@ export function AboutPanel() {
       <main className="about-main">
         <div className="about-header">
           <div className="about-icon-wrapper">
-            <Activity size={24} className="text-indigo-500 dark:text-indigo-400" />
+            <Activity size={24} className="icon-indigo" />
           </div>
           <h2 className="about-title">{pkg.name}</h2>
           <span className="about-version">v{pkg.version}</span>

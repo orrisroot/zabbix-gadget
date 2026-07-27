@@ -46,7 +46,7 @@ export function Header({ loading, onSettingsClick, onAboutClick, theme, onThemeT
   const themeInfo = getThemeInfo();
 
   return (
-    <header role="toolbar" className="app-header w-full" onMouseDown={handleMouseDown}>
+    <header role="toolbar" className="app-header" onMouseDown={handleMouseDown}>
       <div className="header-title-container">
         <Activity size={13} className="header-icon-activity" />
         <span className="header-title">System Status</span>

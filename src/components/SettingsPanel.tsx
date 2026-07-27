@@ -230,7 +230,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
 
       <div className="settings-main">
         {/* Section 1: Server List */}
-        <div className="settings-section flex-1 min-h-0">
+        <div className="settings-section flex-1-min-h-0">
           <div className="settings-section-top">
             <div className="flex-items-center-gap2">
               <ServerIcon size={14} className="icon-muted" />
@@ -239,7 +239,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             <button
               type="button"
               onClick={handleOpenAddWindow}
-              className="btn-primary !py-1 !px-2 text-xs font-bold gap-1 cursor-pointer flex items-center shadow-none bg-indigo-600 hover:bg-indigo-500"
+              className="btn-primary settings-btn-add"
               title="Add Target"
             >
               <Plus size={12} /> Add Target
@@ -250,7 +250,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             {servers.length === 0 ? (
               <div className="settings-empty">No connection targets registered</div>
             ) : (
-              <ul className="flex flex-col gap-1">
+              <ul className="settings-server-list-inner">
                 {servers.map((s, i) => (
                   <SettingsServerItem
                     key={s.label}
@@ -273,7 +273,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         </div>
 
         {/* Section 2: General Settings (Theme & Refresh Interval) */}
-        <div className="grid grid-cols-2 gap-3 flex-shrink-0">
+        <div className="settings-grid-2col">
           <div className="settings-section">
             <div className="settings-section-top">
               <div className="flex-items-center-gap2">
@@ -290,14 +290,11 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 }}
                 className="settings-select-btn"
               >
-                <div className="flex items-center gap-2 overflow-hidden">
+                <div className="settings-dropdown-item-icon">
                   {activeThemeOption.icon}
                   <span className="truncate">{activeThemeOption.label}</span>
                 </div>
-                <ChevronDown
-                  size={14}
-                  className={`icon-muted transition-transform flex-shrink-0 ${isThemeOpen ? 'rotate-180' : ''}`}
-                />
+                <ChevronDown size={14} className={`icon-muted settings-chevron ${isThemeOpen ? 'rotate-180' : ''}`} />
               </button>
               {isThemeOpen && (
                 <div className="settings-dropdown">
@@ -309,7 +306,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                         setTheme(opt.value);
                         setIsThemeOpen(false);
                       }}
-                      className={`settings-dropdown-item flex items-center gap-2 ${
+                      className={`settings-dropdown-item settings-dropdown-item-icon ${
                         theme === opt.value ? 'settings-dropdown-item-active' : 'settings-dropdown-item-inactive'
                       }`}
                     >
@@ -341,7 +338,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 <span>{activeIntervalLabel}</span>
                 <ChevronDown
                   size={14}
-                  className={`icon-muted transition-transform flex-shrink-0 ${isIntervalOpen ? 'rotate-180' : ''}`}
+                  className={`icon-muted settings-chevron ${isIntervalOpen ? 'rotate-180' : ''}`}
                 />
               </button>
               {isIntervalOpen && (
@@ -370,7 +367,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         </div>
       </div>
 
-      <footer className="panel-footer flex justify-between items-center">
+      <footer className="panel-footer">
         <button type="button" onClick={closeWindow} className="btn-secondary">
           Cancel
         </button>
