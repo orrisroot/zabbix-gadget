@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, Download, Info, Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import PanelHeader from '@/components/PanelHeader';
+import { ScrollArea } from '@/components/ScrollArea';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { useTauriWindow } from '@/hooks/useTauriWindow';
 
@@ -155,12 +156,14 @@ export function UpdatePanel() {
               </div>
 
               {changelog && (
-                <div className="update-notes-container" style={{ padding: '12px' }}>
-                  <h4 className="update-notes-title">
-                    <Info size={10} /> Release Notes
-                  </h4>
-                  <p className="update-notes-body">{changelog}</p>
-                </div>
+                <ScrollArea className="update-notes-container">
+                  <div style={{ padding: '12px' }}>
+                    <h4 className="update-notes-title">
+                      <Info size={10} /> Release Notes
+                    </h4>
+                    <p className="update-notes-body">{changelog}</p>
+                  </div>
+                </ScrollArea>
               )}
             </div>
           )}

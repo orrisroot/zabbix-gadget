@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import PanelHeader from '@/components/PanelHeader';
+import { ScrollArea } from '@/components/ScrollArea';
 import SettingsServerItem from '@/components/SettingsServerItem';
 import { useTauriWindow } from '@/hooks/useTauriWindow';
 import { useZabbixStore } from '@/hooks/useZabbix';
@@ -245,28 +246,30 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             </button>
           </div>
 
-          <ul className="settings-server-list">
+          <ScrollArea className="settings-server-list">
             {servers.length === 0 ? (
               <div className="settings-empty">No connection targets registered</div>
             ) : (
-              servers.map((s, i) => (
-                <SettingsServerItem
-                  key={s.label}
-                  server={s}
-                  index={i}
-                  isDragging={draggedIndex === i}
-                  testStatus={testStatus[s.label] || 'idle'}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onDragEnd={handleDragEnd}
-                  onTest={handleTest}
-                  onEdit={handleOpenEditWindow}
-                  onRemove={handleRemove}
-                />
-              ))
+              <ul className="flex flex-col gap-1">
+                {servers.map((s, i) => (
+                  <SettingsServerItem
+                    key={s.label}
+                    server={s}
+                    index={i}
+                    isDragging={draggedIndex === i}
+                    testStatus={testStatus[s.label] || 'idle'}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onDragEnd={handleDragEnd}
+                    onTest={handleTest}
+                    onEdit={handleOpenEditWindow}
+                    onRemove={handleRemove}
+                  />
+                ))}
+              </ul>
             )}
-          </ul>
+          </ScrollArea>
         </div>
 
         {/* Section 2: General Settings (Theme & Refresh Interval) */}

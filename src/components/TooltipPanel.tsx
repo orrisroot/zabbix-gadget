@@ -1,6 +1,7 @@
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { ScrollArea } from '@/components/ScrollArea';
 import type { ZabbixTrigger } from '@/types/zabbix';
 
 interface TooltipData {
@@ -110,7 +111,7 @@ export function TooltipPanel() {
         <span className="tooltip-badge">{data.count} Triggers</span>
       </div>
 
-      <div className="tooltip-list">
+      <ScrollArea className="tooltip-list">
         {data.details.map((t, i) => {
           const changeTime = t.lastchange ? new Date(parseInt(t.lastchange, 10) * 1000).toLocaleString() : 'Unknown';
 
@@ -130,7 +131,7 @@ export function TooltipPanel() {
             </div>
           );
         })}
-      </div>
+      </ScrollArea>
 
       <div className="tooltip-footer">
         <span className="tooltip-footer-label">Server:</span>

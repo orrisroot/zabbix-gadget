@@ -26,14 +26,13 @@ export function useWindowAutoResize({ enabled, servers, serverStatuses }: UseWin
       const footerEl = document.querySelector('.app-footer');
 
       if (headerEl && mainContentEl) {
-        const headerHeight = headerEl.getBoundingClientRect().height;
-        const mainHeight = mainContentEl.getBoundingClientRect().height;
-        const footerHeight = footerEl ? footerEl.getBoundingClientRect().height : 0;
+        const headerHeight = Math.ceil(headerEl.getBoundingClientRect().height);
+        const mainHeight = Math.ceil(mainContentEl.getBoundingClientRect().height);
+        const footerHeight = footerEl ? Math.ceil(footerEl.getBoundingClientRect().height) : 0;
 
-        // Sum elements + main paddings (2px top, 2px bottom) + container border (2px) + 1px safety buffer to prevent OS border discrepancies
-        const totalHeight = Math.ceil(headerHeight + mainHeight + footerHeight + 4 + 2 + 1);
+        const totalHeight = headerHeight + mainHeight + footerHeight + 4 + 2 + 1;
 
-        // Cap the window height between 70px min and 550px max to prevent shrinking
+        // Cap the window height between 70px min and 550px max
         const targetHeight = Math.max(Math.min(totalHeight, 550), 70);
 
         try {

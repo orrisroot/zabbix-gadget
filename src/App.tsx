@@ -229,10 +229,12 @@ function App() {
         theme={config?.settings.theme ?? 'system'}
         onThemeToggle={handleThemeToggle}
       />
-      <main className={`app-main scrollbar-thin ${!hasServers ? 'app-main-empty' : ''}`}>
-        {hasServers && config?.servers ? (
+      {hasServers && config?.servers ? (
+        <main className="app-main">
           <TriggerTable servers={config.servers} serverStatuses={serverStatuses} />
-        ) : (
+        </main>
+      ) : (
+        <main className="app-main app-main-empty">
           <div className="error-overlay">
             <AlertCircle className="icon-error-pulse" />
             <div>
@@ -245,8 +247,8 @@ function App() {
               </p>
             </div>
           </div>
-        )}
-      </main>
+        </main>
+      )}
       {hasServers && (
         <footer className="app-footer">
           <span>Refresh Interval: {intervalLabel}</span>

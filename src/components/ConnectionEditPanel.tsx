@@ -2,6 +2,7 @@ import { emit, listen } from '@tauri-apps/api/event';
 import { AlertCircle, Check, CheckCircle, Plus, RefreshCw, Server } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import PanelHeader from '@/components/PanelHeader';
+import { ScrollArea } from '@/components/ScrollArea';
 import { useTauriWindow } from '@/hooks/useTauriWindow';
 import { loginServer } from '@/lib/zabbix-api';
 import type { ServerConfig } from '@/types/config';
@@ -163,139 +164,141 @@ export function ConnectionEditPanel() {
         onClose={handleClose}
       />
 
-      <main className="settings-form-content">
-        {/* Connection Label */}
-        <div className="settings-form-group">
-          <span className="settings-form-label">Label</span>
-          <input
-            placeholder="Label"
-            value={formLabel}
-            onChange={(e) => setFormLabel(e.target.value)}
-            className="settings-input"
-          />
-        </div>
-
-        {/* Host URL */}
-        <div className="settings-form-group">
-          <span className="settings-form-label">Host URL</span>
-          <div className="relative group">
-            <input
-              placeholder="https://zabbix.example.com"
-              value={formHost}
-              onChange={(e) => setFormHost(e.target.value)}
-              className={`settings-input ${!isHostUrlValid ? 'settings-input-error' : ''}`}
-            />
-            {!isHostUrlValid && (
-              <div className="settings-tooltip">
-                URL must start with http:// or https://
-                <div className="settings-tooltip-arrow" />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Authentication Type Switch */}
-        <div className="settings-form-group">
-          <span className="settings-form-label">Auth Type</span>
-          <div className="settings-auth-tabs">
-            <button
-              type="button"
-              onClick={() => setAuthType('apikey')}
-              className={`settings-auth-tab ${
-                authType === 'apikey' ? 'settings-auth-tab-active' : 'settings-auth-tab-inactive'
-              }`}
-            >
-              API Key
-            </button>
-            <button
-              type="button"
-              onClick={() => setAuthType('userpass')}
-              className={`settings-auth-tab ${
-                authType === 'userpass' ? 'settings-auth-tab-active' : 'settings-auth-tab-inactive'
-              }`}
-            >
-              User / Password
-            </button>
-          </div>
-        </div>
-
-        {/* User & Password or API Key Input */}
-        {authType === 'userpass' ? (
-          <div className="settings-form-row">
-            <div className="settings-form-group-flex">
-              <span className="settings-form-label">User</span>
-              <input
-                placeholder="User"
-                value={formUser}
-                onChange={(e) => setFormUser(e.target.value)}
-                className="settings-input"
-              />
-            </div>
-            <div className="settings-form-group-flex">
-              <span className="settings-form-label">Password</span>
-              <input
-                placeholder="Password"
-                type="password"
-                value={formPass}
-                onChange={(e) => setFormPass(e.target.value)}
-                className="settings-input"
-              />
-            </div>
-          </div>
-        ) : (
+      <ScrollArea className="settings-form-content" role="main">
+        <div className="p-4 flex flex-col gap-2">
+          {/* Connection Label */}
           <div className="settings-form-group">
-            <span className="settings-form-label">API Key</span>
+            <span className="settings-form-label">Label</span>
             <input
-              placeholder="API Key"
-              type="password"
-              value={formApiKey}
-              onChange={(e) => setFormApiKey(e.target.value)}
+              placeholder="Label"
+              value={formLabel}
+              onChange={(e) => setFormLabel(e.target.value)}
               className="settings-input"
             />
           </div>
-        )}
 
-        {/* Basic Auth Checkbox */}
-        <div className="settings-checkbox-container">
-          <input
-            type="checkbox"
-            id="use-basic-auth"
-            checked={useBasicAuth}
-            onChange={(e) => setUseBasicAuth(e.target.checked)}
-            className="settings-checkbox"
-          />
-          <label htmlFor="use-basic-auth" className="settings-checkbox-label">
-            Use Basic Authentication
-          </label>
-        </div>
-
-        {/* Basic Auth Credentials Fields */}
-        {useBasicAuth && (
-          <div className="settings-basic-auth-fields">
-            <div className="settings-form-group-flex">
-              <span className="settings-form-label">Basic User</span>
+          {/* Host URL */}
+          <div className="settings-form-group">
+            <span className="settings-form-label">Host URL</span>
+            <div className="relative group">
               <input
-                placeholder="User"
-                value={formBasicAuthUser}
-                onChange={(e) => setFormBasicAuthUser(e.target.value)}
-                className="settings-input"
+                placeholder="https://zabbix.example.com"
+                value={formHost}
+                onChange={(e) => setFormHost(e.target.value)}
+                className={`settings-input ${!isHostUrlValid ? 'settings-input-error' : ''}`}
               />
-            </div>
-            <div className="settings-form-group-flex">
-              <span className="settings-form-label">Basic Password</span>
-              <input
-                placeholder="Password"
-                type="password"
-                value={formBasicAuthPass}
-                onChange={(e) => setFormBasicAuthPass(e.target.value)}
-                className="settings-input"
-              />
+              {!isHostUrlValid && (
+                <div className="settings-tooltip">
+                  URL must start with http:// or https://
+                  <div className="settings-tooltip-arrow" />
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        {formErrorMessage && <div className="settings-form-error">{formErrorMessage}</div>}
-      </main>
+          {/* Authentication Type Switch */}
+          <div className="settings-form-group">
+            <span className="settings-form-label">Auth Type</span>
+            <div className="settings-auth-tabs">
+              <button
+                type="button"
+                onClick={() => setAuthType('apikey')}
+                className={`settings-auth-tab ${
+                  authType === 'apikey' ? 'settings-auth-tab-active' : 'settings-auth-tab-inactive'
+                }`}
+              >
+                API Key
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthType('userpass')}
+                className={`settings-auth-tab ${
+                  authType === 'userpass' ? 'settings-auth-tab-active' : 'settings-auth-tab-inactive'
+                }`}
+              >
+                User / Password
+              </button>
+            </div>
+          </div>
+
+          {/* User & Password or API Key Input */}
+          {authType === 'userpass' ? (
+            <div className="settings-form-row">
+              <div className="settings-form-group-flex">
+                <span className="settings-form-label">User</span>
+                <input
+                  placeholder="User"
+                  value={formUser}
+                  onChange={(e) => setFormUser(e.target.value)}
+                  className="settings-input"
+                />
+              </div>
+              <div className="settings-form-group-flex">
+                <span className="settings-form-label">Password</span>
+                <input
+                  placeholder="Password"
+                  type="password"
+                  value={formPass}
+                  onChange={(e) => setFormPass(e.target.value)}
+                  className="settings-input"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="settings-form-group">
+              <span className="settings-form-label">API Key</span>
+              <input
+                placeholder="API Key"
+                type="password"
+                value={formApiKey}
+                onChange={(e) => setFormApiKey(e.target.value)}
+                className="settings-input"
+              />
+            </div>
+          )}
+
+          {/* Basic Auth Checkbox */}
+          <div className="settings-checkbox-container">
+            <input
+              type="checkbox"
+              id="use-basic-auth"
+              checked={useBasicAuth}
+              onChange={(e) => setUseBasicAuth(e.target.checked)}
+              className="settings-checkbox"
+            />
+            <label htmlFor="use-basic-auth" className="settings-checkbox-label">
+              Use Basic Authentication
+            </label>
+          </div>
+
+          {/* Basic Auth Credentials Fields */}
+          {useBasicAuth && (
+            <div className="settings-basic-auth-fields">
+              <div className="settings-form-group-flex">
+                <span className="settings-form-label">Basic User</span>
+                <input
+                  placeholder="User"
+                  value={formBasicAuthUser}
+                  onChange={(e) => setFormBasicAuthUser(e.target.value)}
+                  className="settings-input"
+                />
+              </div>
+              <div className="settings-form-group-flex">
+                <span className="settings-form-label">Basic Password</span>
+                <input
+                  placeholder="Password"
+                  type="password"
+                  value={formBasicAuthPass}
+                  onChange={(e) => setFormBasicAuthPass(e.target.value)}
+                  className="settings-input"
+                />
+              </div>
+            </div>
+          )}
+
+          {formErrorMessage && <div className="settings-form-error">{formErrorMessage}</div>}
+        </div>
+      </ScrollArea>
 
       <footer className="panel-footer">
         <button type="button" onClick={handleClose} className="btn-secondary">
