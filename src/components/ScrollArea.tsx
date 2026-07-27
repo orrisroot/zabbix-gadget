@@ -19,9 +19,6 @@ export function ScrollArea({ children, className = '', style, role }: ScrollArea
     if (!el) return;
     const contentHeight = el.firstElementChild?.scrollHeight ?? el.scrollHeight;
     const overflow = contentHeight > el.clientHeight;
-    if (import.meta.env.DEV) {
-      console.log(`ScrollArea: ch=${el.clientHeight} contentSh=${contentHeight} overflow=${overflow}`);
-    }
     setHasOverflow(overflow);
     if (overflow) {
       const thumbH = Math.max(24, (el.clientHeight / contentHeight) * el.clientHeight);

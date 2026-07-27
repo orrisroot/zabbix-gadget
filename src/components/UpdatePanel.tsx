@@ -8,19 +8,11 @@ export function UpdatePanel() {
   const { hideWindow } = useTauriWindow();
   const {
     status,
-    setStatus,
     currentVersion,
-    setCurrentVersion,
     newVersion,
-    setNewVersion,
     changelog,
-    setChangelog,
     errorMessage,
-    setErrorMessage,
     downloadProgress,
-    setDownloadProgress,
-    showDebug,
-    setShowDebug,
     checkForUpdates,
     startInstall,
     handleRelaunch,
@@ -42,75 +34,11 @@ export function UpdatePanel() {
 
   return (
     <div className="window-base">
-      {import.meta.env.DEV && showDebug && (
-        <div className="update-debug-ui">
-          <span className="text-slate-400 font-bold mr-1">Debug UI:</span>
-          <button type="button" onClick={() => setStatus('checking')} className="update-debug-btn">
-            Checking
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setStatus('no-update');
-              setCurrentVersion('0.1.3');
-            }}
-            className="update-debug-btn"
-          >
-            Up to date
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setStatus('available');
-              setCurrentVersion('0.1.3');
-              setNewVersion('0.1.4');
-              setChangelog('See the assets to download this version and install.');
-            }}
-            className="update-debug-btn"
-          >
-            Available
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setStatus('downloading');
-              setDownloadProgress({ downloaded: 0, total: 10000000 });
-            }}
-            className="update-debug-btn"
-          >
-            Downloading
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setStatus('relaunch-pending');
-              setNewVersion('0.1.3');
-            }}
-            className="update-debug-btn"
-          >
-            Relaunch
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setStatus('error');
-              setErrorMessage('Network connection lost: Could not connect to update host.');
-            }}
-            className="update-debug-btn"
-          >
-            Error
-          </button>
-        </div>
-      )}
-
       <PanelHeader
         title="Software Update"
         icon={<Sparkles size={18} className="icon-sparkles" />}
         showCloseButton={status !== 'downloading'}
         onClose={hideWindow}
-        onTitleClick={import.meta.env.DEV ? () => setShowDebug(!showDebug) : undefined}
-        titleTitle={import.meta.env.DEV ? 'Click to toggle debug controls' : undefined}
-        titleClassName={import.meta.env.DEV ? 'cursor-pointer select-none' : ''}
       />
 
       {/* Main Content Area */}

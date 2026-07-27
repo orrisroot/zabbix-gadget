@@ -36,10 +36,6 @@ export function useWindowAutoResize({ enabled, servers, serverStatuses }: UseWin
         const targetHeight = Math.max(Math.min(totalHeight, 550), 70);
 
         try {
-          console.log('headerHeight', headerHeight);
-          console.log('mainHeight', mainHeight);
-          console.log('footerHeight', footerHeight);
-          console.log('totalHeight', totalHeight, 'targetHeight', targetHeight);
           const appWindow = getCurrentWebviewWindow();
           const logicalSize = new LogicalSize(600, targetHeight);
           await appWindow.setSize(logicalSize);

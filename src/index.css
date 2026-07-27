@@ -589,10 +589,6 @@
   /* -------------------------------------
      Update Window
   -------------------------------------- */
-  .update-debug-ui {
-    @apply absolute top-10 left-2 right-2 bg-slate-900/95 backdrop-blur-xs text-[10px] p-1.5 flex flex-wrap gap-1 items-center justify-center border border-slate-700 rounded shadow-xl select-none z-50;
-  }
-
   .update-notes-container {
     @apply flex-1 max-h-[100px] bg-slate-50 dark:bg-slate-900/50 rounded-md border border-slate-200 dark:border-slate-800/80 mt-1;
   }
@@ -607,10 +603,6 @@
 
   .update-status-container {
     @apply flex flex-col items-center justify-center py-4 gap-3 text-center w-full;
-  }
-
-  .update-debug-btn {
-    @apply px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 cursor-pointer font-bold border border-slate-700 hover:text-white;
   }
 
   .update-container-inner {

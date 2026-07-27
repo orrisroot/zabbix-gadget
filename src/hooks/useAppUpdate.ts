@@ -29,7 +29,6 @@ export function useAppUpdate() {
     downloaded: 0,
     total: null,
   });
-  const [showDebug, setShowDebug] = useState(true);
 
   const checkForUpdates = useCallback(async () => {
     setStatus('checking');
@@ -107,19 +106,11 @@ export function useAppUpdate() {
 
   return {
     status,
-    setStatus,
     currentVersion,
-    setCurrentVersion,
     newVersion,
-    setNewVersion,
     changelog,
-    setChangelog,
     errorMessage,
-    setErrorMessage,
     downloadProgress,
-    setDownloadProgress,
-    showDebug,
-    setShowDebug,
     checkForUpdates,
     startInstall,
     handleRelaunch,

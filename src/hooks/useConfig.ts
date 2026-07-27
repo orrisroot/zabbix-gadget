@@ -17,7 +17,6 @@ export function useConfig() {
     const loadAndSetConfig = async () => {
       try {
         const cfg = await getConfig();
-        console.log('useConfig: configuration loaded');
         useZabbixStore.setState({ config: cfg });
       } catch (e) {
         console.error('Failed to load config:', e);
@@ -44,7 +43,6 @@ export function useConfig() {
 
     // Listen for configuration updates from the settings window or backend
     const unlistenConfigPromise = listen<AppConfig>('config-updated', (event) => {
-      console.log('useConfig: configuration updated');
       useZabbixStore.setState({ config: event.payload });
     });
 
