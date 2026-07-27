@@ -20,11 +20,7 @@ import { useZabbixStore } from '@/hooks/useZabbix';
 import { loginServer, saveConfig } from '@/lib/zabbix-api';
 import type { ServerConfig } from '@/types/config';
 
-interface SettingsPanelProps {
-  onClose: () => void;
-}
-
-export function SettingsPanel({ onClose }: SettingsPanelProps) {
+export function SettingsPanel() {
   const { hideWindow } = useTauriWindow();
   const { config } = useZabbixStore();
   const [servers, setServers] = useState<ServerConfig[]>(config?.servers ?? []);
@@ -187,7 +183,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       };
 
       await saveConfig(newConfig);
-      onClose();
+      await hideWindow();
     } catch (err) {
       console.error('Failed to save config:', err);
     }
@@ -201,7 +197,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         setTheme(config.settings.theme ?? 'system');
       }
       await hideWindow();
-      onClose();
     } catch (err) {
       console.error('Failed to hide settings window:', err);
     }
