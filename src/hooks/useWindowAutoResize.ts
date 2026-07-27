@@ -30,7 +30,7 @@ export function useWindowAutoResize({ enabled, servers, serverStatuses }: UseWin
         const mainHeight = Math.ceil(mainContentEl.getBoundingClientRect().height);
         const footerHeight = footerEl ? Math.ceil(footerEl.getBoundingClientRect().height) : 0;
 
-        const totalHeight = headerHeight + mainHeight + footerHeight + 4 + 2 + 1;
+        const totalHeight = headerHeight + mainHeight + footerHeight + 4 + 2 + 3;
 
         // Cap the window height between 70px min and 550px max
         const targetHeight = Math.max(Math.min(totalHeight, 550), 70);
