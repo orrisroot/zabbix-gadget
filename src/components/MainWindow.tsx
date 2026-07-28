@@ -1,7 +1,9 @@
+import { invoke } from '@tauri-apps/api/core';
 import { PhysicalPosition } from '@tauri-apps/api/dpi';
+import { Menu } from '@tauri-apps/api/menu';
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { AlertCircle, Settings } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import TriggerTable from '@/components/TriggerTable';
 import { useWindowAutoResize } from '@/hooks/useWindowAutoResize';
@@ -55,7 +57,7 @@ export default function MainWindow({ serverStatuses, lastUpdate }: MainWindowPro
   const intervalMin = refreshInterval / 60;
   const intervalLabel = intervalMin === 1 ? '1 minute' : `${intervalMin} minutes`;
 
-  const handleSettingsClick = async () => {
+  const handleSettingsClick = useCallback(async () => {
     try {
       const settingsWin = await WebviewWindow.getByLabel('settings');
       if (settingsWin) {
@@ -82,9 +84,9 @@ export default function MainWindow({ serverStatuses, lastUpdate }: MainWindowPro
     } catch (err) {
       console.error('Failed to show settings window:', err);
     }
-  };
+  }, []);
 
-  const handleAboutClick = async () => {
+  const handleAboutClick = useCallback(async () => {
     try {
       const aboutWin = await WebviewWindow.getByLabel('about');
       if (aboutWin) {
@@ -94,7 +96,105 @@ export default function MainWindow({ serverStatuses, lastUpdate }: MainWindowPro
     } catch (err) {
       console.error('Failed to show about window:', err);
     }
-  };
+  }, []);
+
+  const handleCheckUpdate = useCallback(async () => {
+    try {
+      const updateWin = await WebviewWindow.getByLabel('update');
+      if (updateWin) {
+        await updateWin.show();
+        await updateWin.setFocus();
+        await updateWin.emit('trigger-check');
+      }
+    } catch (err) {
+      console.error('Failed to show update window:', err);
+    }
+  }, []);
+
+  const handleToggleAlwaysOnTop = useCallback(async () => {
+    try {
+      await invoke('toggle_always_on_top');
+    } catch (err) {
+      console.error('Failed to toggle always on top:', err);
+    }
+  }, []);
+
+  const handleQuit = useCallback(async () => {
+    try {
+      await invoke('quit_app');
+    } catch (err) {
+      console.error('Failed to quit app:', err);
+    }
+  }, []);
+
+  const handleInspectElement = useCallback(async () => {
+    try {
+      await invoke('open_devtools');
+    } catch (err) {
+      console.error('Failed to open devtools:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleContextMenu = async (e: MouseEvent) => {
+      e.preventDefault();
+      try {
+        const isAlwaysOnTop = await invoke<boolean>('is_always_on_top').catch(() => false);
+
+        const menu = await Menu.new({
+          items: [
+            {
+              text: 'Always on Top',
+              checked: isAlwaysOnTop,
+              action: handleToggleAlwaysOnTop,
+            },
+            { item: 'Separator' as const },
+            {
+              text: 'Settings',
+              action: handleSettingsClick,
+            },
+            {
+              text: 'Check for Updates',
+              action: handleCheckUpdate,
+            },
+            {
+              text: 'About',
+              action: handleAboutClick,
+            },
+            { item: 'Separator' as const },
+            {
+              text: 'Quit',
+              action: handleQuit,
+            },
+            ...(import.meta.env.DEV
+              ? [
+                  { item: 'Separator' as const },
+                  {
+                    text: 'Inspect Element',
+                    action: handleInspectElement,
+                  },
+                ]
+              : []),
+          ],
+        });
+        await menu.popup();
+      } catch (err) {
+        console.error('Failed to show context menu:', err);
+      }
+    };
+
+    window.addEventListener('contextmenu', handleContextMenu);
+    return () => {
+      window.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [
+    handleSettingsClick,
+    handleCheckUpdate,
+    handleAboutClick,
+    handleInspectElement,
+    handleToggleAlwaysOnTop,
+    handleQuit,
+  ]);
 
   const handleThemeToggle = async () => {
     if (!config) return;

@@ -13,6 +13,27 @@ use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 static IS_ALWAYS_ON_TOP: AtomicBool = AtomicBool::new(false);
 static CURRENT_TRAY_STATE: Mutex<TrayMenuState> = Mutex::new(TrayMenuState::Normal);
 
+pub(crate) fn get_always_on_top_state() -> bool {
+    IS_ALWAYS_ON_TOP.load(Ordering::SeqCst)
+}
+
+pub(crate) fn toggle_always_on_top_action(app: &tauri::AppHandle) -> bool {
+    if let Some(window) = app.get_webview_window("main") {
+        let current = IS_ALWAYS_ON_TOP.load(Ordering::SeqCst);
+        let next = !current;
+        if window.set_always_on_top(next).is_ok() {
+            IS_ALWAYS_ON_TOP.store(next, Ordering::SeqCst);
+            let current_tray_state = CURRENT_TRAY_STATE
+                .lock()
+                .map(|guard| *guard)
+                .unwrap_or_else(|e| *e.into_inner());
+            let _ = set_tray_menu(app, current_tray_state);
+            return next;
+        }
+    }
+    IS_ALWAYS_ON_TOP.load(Ordering::SeqCst)
+}
+
 fn set_window_visibility(window: &tauri::WebviewWindow, visible: bool) -> Result<(), tauri::Error> {
     if visible {
         window.show()?;
@@ -130,18 +151,7 @@ fn setup_system_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Err
                 }
             }
             "toggle_always_on_top" => {
-                if let Some(window) = app.get_webview_window("main") {
-                    let current = IS_ALWAYS_ON_TOP.load(Ordering::SeqCst);
-                    let next = !current;
-                    if window.set_always_on_top(next).is_ok() {
-                        IS_ALWAYS_ON_TOP.store(next, Ordering::SeqCst);
-                        let current_tray_state = CURRENT_TRAY_STATE
-                            .lock()
-                            .map(|guard| *guard)
-                            .unwrap_or_else(|e| *e.into_inner());
-                        let _ = set_tray_menu(app, current_tray_state);
-                    }
-                }
+                let _ = toggle_always_on_top_action(app);
             }
             "settings" => {
                 if let Some(settings_win) = app.get_webview_window("settings") {
@@ -243,6 +253,10 @@ pub fn run() {
             commands::login,
             commands::get_config_dir,
             commands::close_app,
+            commands::quit_app,
+            commands::open_devtools,
+            commands::is_always_on_top,
+            commands::toggle_always_on_top,
             commands::check_for_update,
             commands::install_update,
             commands::relaunch_app,

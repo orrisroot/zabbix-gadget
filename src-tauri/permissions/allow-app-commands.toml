@@ -8,6 +8,10 @@ commands.allow = [
     "login",
     "fetch_triggers",
     "close_app",
+    "quit_app",
+    "open_devtools",
+    "is_always_on_top",
+    "toggle_always_on_top",
     "check_for_update",
     "install_update",
     "relaunch_app"
