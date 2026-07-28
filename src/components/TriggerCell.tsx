@@ -1,7 +1,4 @@
-import { LogicalPosition } from '@tauri-apps/api/dpi';
-import { emit } from '@tauri-apps/api/event';
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
-import type { MouseEvent } from 'react';
+import { useTooltip } from '@/hooks/useTooltip';
 import { PRIORITY_MAP, type ZabbixTrigger } from '@/types/zabbix';
 
 interface TriggerCellProps {
@@ -24,6 +21,15 @@ export function TriggerCell({ priority, status, isError, isLoading, serverLabel 
     bgColor: 'bg-gray-500',
   };
 
+  const { handleMouseEnter, handleMouseMove, handleMouseLeave } = useTooltip({
+    priorityLabel: priorityInfo.label,
+    serverLabel,
+    count,
+    colorClass: priorityInfo.color,
+    bgColor: priorityInfo.bgColor,
+    details,
+  });
+
   const getCellClass = () => {
     if (isError || isLoading) return 'trigger-cell-inactive';
     if (count === 0) return 'trigger-cell-empty';
@@ -45,90 +51,11 @@ export function TriggerCell({ priority, status, isError, isLoading, serverLabel 
     }
   };
 
-  const updateTooltipPosition = async (e: MouseEvent) => {
-    try {
-      const tooltipWin = await WebviewWindow.getByLabel('tooltip');
-      if (!tooltipWin) return;
-
-      const mouseX = e.clientX;
-      const mouseY = e.clientY;
-
-      const mouseLogicalX = window.screenX + mouseX;
-      const mouseLogicalY = window.screenY + mouseY;
-
-      // Position directly at the cursor's bottom-right (standard tooltip behavior)
-      let x = mouseLogicalX + 12;
-      const y = mouseLogicalY + 16;
-
-      // Constrain horizontally within screen boundaries (left edge)
-      if (x < 10) {
-        x = 10;
-      }
-
-      await tooltipWin.setPosition(new LogicalPosition(x, y));
-    } catch (err) {
-      console.error('Failed to update tooltip position:', err);
-    }
-  };
-
-  const showTooltip = async (e: MouseEvent, forceUpdateContent = false) => {
-    try {
-      const tooltipWin = await WebviewWindow.getByLabel('tooltip');
-      if (!tooltipWin) return;
-
-      // Always update position to follow cursor
-      await updateTooltipPosition(e);
-
-      const isVisible = await tooltipWin.isVisible();
-      if (forceUpdateContent || !isVisible) {
-        await emit('update-tooltip', {
-          label: priorityInfo.label,
-          serverLabel,
-          count,
-          priorityLabel: priorityInfo.label,
-          colorClass: priorityInfo.color,
-          bgColor: priorityInfo.bgColor,
-          details,
-        });
-      }
-
-      if (!isVisible) {
-        // Show the window
-        await tooltipWin.show();
-
-        // Position again immediately after showing to enforce position on Windows/Linux window managers
-        await updateTooltipPosition(e);
-      }
-    } catch (err) {
-      console.error('Failed to show tooltip window:', err);
-    }
-  };
-
-  const handleMouseEnter = async (e: MouseEvent) => {
-    if (count === 0) return;
-    // Request to cancel any pending hide operation on the tooltip window
-    await emit('cancel-hide-tooltip');
-    await showTooltip(e, true);
-  };
-
-  const handleMouseMove = async (e: MouseEvent) => {
-    if (count === 0) return;
-    // Cancel any pending hide operation since we are actively moving inside the trigger cell
-    await emit('cancel-hide-tooltip');
-    await showTooltip(e, false);
-  };
-
-  const handleMouseLeave = async () => {
-    if (count === 0) return;
-    // Tell the tooltip window that the cursor left the trigger cell
-    await emit('request-hide-tooltip');
-  };
-
   return (
     <td
       className={`trigger-cell ${getCellClass()}`}
-      onMouseEnter={(e) => handleMouseEnter(e)}
-      onMouseMove={(e) => handleMouseMove(e)}
+      onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
       {count}
