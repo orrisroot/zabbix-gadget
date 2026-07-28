@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-07-28
+
+### Added
+- **Context Menus**: Add custom right-click context menu to the main window and restrict context menus on secondary windows to inspect element in debug mode.
+- **Custom ScrollArea**: Replace native scrollbars with a custom styled `ScrollArea` component across popup panels.
+
+### Changed
+- **App & Router Architecture**: Refactor main window structure into a dedicated `MainWindow` component and simplify `App` as a dedicated router.
+- **Custom Hooks**: Extract theme state and listener management into `useTheme` hook and tooltip window logic into `useTooltip` hook.
+- **Styling Architecture**: Extract inline utility classes into named CSS component classes for improved maintainability.
+
+### Fixed
+- **Window Auto-Resize**: Adjust dynamic height calculation to prevent border clipping during auto-resizing.
+
 ## [0.1.3] - 2026-07-25
 
 ### Added

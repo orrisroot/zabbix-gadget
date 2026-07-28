@@ -78,7 +78,7 @@ export function UpdatePanel() {
                     <span className="update-badge-version">v{newVersion}</span>
                   </h3>
                   <p className="update-available-desc">
-                    A new version is ready to install (current: v{currentVersion || '0.1.3'}).
+                    A new version is ready to install{currentVersion ? ` (current: v${currentVersion})` : ''}.
                   </p>
                 </div>
               </div>
