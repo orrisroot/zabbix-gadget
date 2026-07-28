@@ -7,6 +7,7 @@ import SettingsPanel from '@/components/SettingsPanel';
 import TooltipPanel from '@/components/TooltipPanel';
 import UpdatePanel from '@/components/UpdatePanel';
 import { useConfig } from '@/hooks/useConfig';
+import { useSecondaryContextMenu } from '@/hooks/useSecondaryContextMenu';
 
 function App() {
   const { config, serverStatuses, lastUpdate } = useConfig();
@@ -17,6 +18,11 @@ function App() {
   const isConnectionEditWindow =
     typeof window !== 'undefined' && window.location.search.includes('window=connection-edit');
   const isAboutWindow = typeof window !== 'undefined' && window.location.search.includes('window=about');
+
+  const isOtherWindow =
+    isSettingsWindow || isTooltipWindow || isUpdateWindow || isConnectionEditWindow || isAboutWindow;
+
+  useSecondaryContextMenu(isOtherWindow);
 
   useEffect(() => {
     const theme = config?.settings.theme ?? 'system';
