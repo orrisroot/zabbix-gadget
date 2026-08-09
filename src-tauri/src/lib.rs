@@ -75,8 +75,7 @@ pub(crate) fn set_tray_menu(
         None::<&str>,
     )?;
     let settings_i = MenuItem::with_id(app, "settings", "Settings...", true, None::<&str>)?;
-    let about_i =
-        MenuItem::with_id(app, "about", "About", true, None::<&str>)?;
+    let about_i = MenuItem::with_id(app, "about", "About", true, None::<&str>)?;
     let check_update_i =
         MenuItem::with_id(app, "check_update", "Check for Updates", true, None::<&str>)?;
     let install_update_i =
