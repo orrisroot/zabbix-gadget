@@ -52,15 +52,20 @@ pub async fn check_for_update(app_handle: tauri::AppHandle) -> Result<UpdateChec
                     let _ = crate::set_tray_menu(&app_handle, crate::TrayMenuState::Normal);
                     Ok(UpdateCheckResult::NoUpdate)
                 } else {
+                    // No update unequivocally available; restore the default tray menu state
+                    let _ = crate::set_tray_menu(&app_handle, crate::TrayMenuState::Normal);
                     Ok(UpdateCheckResult::Error {
                         message: e.to_string(),
                     })
                 }
             }
         },
-        Err(e) => Ok(UpdateCheckResult::Error {
-            message: e.to_string(),
-        }),
+        Err(e) => {
+            let _ = crate::set_tray_menu(&app_handle, crate::TrayMenuState::Normal);
+            Ok(UpdateCheckResult::Error {
+                message: e.to_string(),
+            })
+        }
     }
 }
 
@@ -105,10 +110,20 @@ pub async fn install_update(app_handle: tauri::AppHandle) -> Result<(), String> 
                 let _ = crate::set_tray_menu(&app_handle, crate::TrayMenuState::RelaunchPending);
                 Ok(())
             }
-            Ok(None) => Err("No update available".to_string()),
-            Err(e) => Err(e.to_string()),
+            Ok(None) => {
+                let _ = crate::set_tray_menu(&app_handle, crate::TrayMenuState::Normal);
+                Err("No update available".to_string())
+            }
+            Err(e) => {
+                // Reset the tray menu state so it does not stay stuck in UpdateAvailable
+                let _ = crate::set_tray_menu(&app_handle, crate::TrayMenuState::Normal);
+                Err(e.to_string())
+            }
         },
-        Err(e) => Err(e.to_string()),
+        Err(e) => {
+            let _ = crate::set_tray_menu(&app_handle, crate::TrayMenuState::Normal);
+            Err(e.to_string())
+        }
     }
 }
 
