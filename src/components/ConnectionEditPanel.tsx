@@ -343,7 +343,12 @@ export function ConnectionEditPanel() {
           <button
             type="button"
             onClick={handleSave}
-            disabled={!formLabel.trim() || !formHost.trim() || !isHostUrlValid || formTestStatus !== 'ok'}
+            disabled={
+              !formLabel.trim() ||
+              !formHost.trim() ||
+              !isHostUrlValid ||
+              (editIndex === null && formTestStatus !== 'ok')
+            }
             className="btn-primary"
           >
             {editIndex !== null ? (
