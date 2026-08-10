@@ -256,6 +256,7 @@ pub fn run() {
             commands::open_devtools,
             commands::is_always_on_top,
             commands::toggle_always_on_top,
+            commands::get_app_version,
             commands::check_for_update,
             commands::install_update,
             commands::relaunch_app,

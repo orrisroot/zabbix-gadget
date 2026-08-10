@@ -36,6 +36,8 @@ export function useAppUpdate() {
     setDownloadProgress({ downloaded: 0, total: null });
 
     try {
+      // Fetch current version so it is available on all result screens,
+      // including the "no update" (already up-to-date) state.
       const ver = await invoke<string>('get_app_version').catch(() => '');
       if (ver) setCurrentVersion(ver);
 

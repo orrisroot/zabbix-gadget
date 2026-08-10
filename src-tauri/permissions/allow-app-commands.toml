@@ -12,6 +12,7 @@ commands.allow = [
     "open_devtools",
     "is_always_on_top",
     "toggle_always_on_top",
+    "get_app_version",
     "check_for_update",
     "install_update",
     "relaunch_app"

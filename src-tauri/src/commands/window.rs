@@ -31,6 +31,11 @@ pub fn quit_app(app_handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
+pub fn get_app_version(app_handle: tauri::AppHandle) -> String {
+    app_handle.package_info().version.to_string()
+}
+
+#[tauri::command]
 pub fn is_always_on_top() -> bool {
     crate::get_always_on_top_state()
 }
