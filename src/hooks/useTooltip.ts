@@ -13,12 +13,18 @@ export interface UseTooltipParams {
   details: ZabbixTrigger[];
 }
 
+// Shared monotonic counter across all tooltip hook instances.
+// Each hovered cell claims a token so a stale cell can detect that the
+// cursor has moved to another cell before emitting a hide request.
+let lastActiveToken = 0;
+
 /**
  * Custom hook to manage tooltip window positioning, IPC updates, and hover timers.
  */
 export function useTooltip({ priorityLabel, serverLabel, count, colorClass, bgColor, details }: UseTooltipParams) {
   const rafIdRef = useRef<number | null>(null);
   const windowRef = useRef<WebviewWindow | null>(null);
+  const tokenRef = useRef<number>(0);
 
   const getTooltipWindow = useCallback(async () => {
     if (!windowRef.current) {
@@ -95,6 +101,8 @@ export function useTooltip({ priorityLabel, serverLabel, count, colorClass, bgCo
   const handleMouseEnter = useCallback(
     async (e: MouseEvent) => {
       if (count === 0) return;
+      // Claim the active token for this cell before showing the tooltip
+      tokenRef.current = ++lastActiveToken;
       await emit('cancel-hide-tooltip');
       await showTooltip(e, true);
     },
@@ -104,6 +112,8 @@ export function useTooltip({ priorityLabel, serverLabel, count, colorClass, bgCo
   const handleMouseMove = useCallback(
     async (e: MouseEvent) => {
       if (count === 0) return;
+      // Refresh the token so this cell remains the active hover target
+      tokenRef.current = ++lastActiveToken;
       await emit('cancel-hide-tooltip');
       await showTooltip(e, false);
     },
@@ -112,7 +122,11 @@ export function useTooltip({ priorityLabel, serverLabel, count, colorClass, bgCo
 
   const handleMouseLeave = useCallback(async () => {
     if (count === 0) return;
-    await emit('request-hide-tooltip');
+    // Only request a hide if no other cell has become active since this cell was hovered.
+    // This prevents a stale cell from hiding the tooltip after the cursor moved on.
+    if (tokenRef.current === lastActiveToken) {
+      await emit('request-hide-tooltip');
+    }
   }, [count]);
 
   useEffect(() => {
