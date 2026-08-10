@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ScrollArea';
 import type { ZabbixTrigger } from '@/types/zabbix';
 
 interface TooltipData {
+  token: number;
   label: string;
   serverLabel: string;
   count: number;
@@ -17,6 +18,9 @@ interface TooltipData {
 export function TooltipPanel() {
   const [data, setData] = useState<TooltipData | null>(null);
   const hideTimeoutRef = useRef<number | null>(null);
+  // Tracks the most recent tooltip activation so stale hide requests
+  // emitted from previously hovered cells can be discarded.
+  const latestTokenRef = useRef<number>(0);
 
   const clearHideTimeout = useCallback(() => {
     if (hideTimeoutRef.current) {
@@ -42,26 +46,29 @@ export function TooltipPanel() {
   );
 
   useEffect(() => {
-    // Listen for updating the tooltip content
+    // Listen for updating the tooltip content; marks this activation as latest
     const unlistenUpdate = listen<TooltipData>('update-tooltip', (event) => {
+      latestTokenRef.current = Math.max(latestTokenRef.current, event.payload.token);
       clearHideTimeout();
       setData(event.payload);
     });
 
-    // Listen for host mouseleave event requests
-    const unlistenRequestHide = listen('request-hide-tooltip', () => {
-      scheduleHide(400); // 400ms buffer to allow cursor to travel from cell to tooltip window
+    // Listen for host activation events (entering/moving over a cell)
+    const unlistenCancelHide = listen<{ token: number }>('cancel-hide-tooltip', (event) => {
+      latestTokenRef.current = Math.max(latestTokenRef.current, event.payload.token);
+      clearHideTimeout();
     });
 
-    // Listen for cancellations (e.g. entering another cell)
-    const unlistenCancelHide = listen('cancel-hide-tooltip', () => {
-      clearHideTimeout();
+    // Listen for host mouseleave requests; ignore stale ones from prior cells
+    const unlistenRequestHide = listen<{ token: number }>('request-hide-tooltip', (event) => {
+      if (event.payload.token < latestTokenRef.current) return;
+      scheduleHide(400); // 400ms buffer to allow cursor to travel from cell to tooltip window
     });
 
     return () => {
       unlistenUpdate.then((unlisten) => unlisten());
-      unlistenRequestHide.then((unlisten) => unlisten());
       unlistenCancelHide.then((unlisten) => unlisten());
+      unlistenRequestHide.then((unlisten) => unlisten());
       clearHideTimeout();
     };
   }, [clearHideTimeout, scheduleHide]);

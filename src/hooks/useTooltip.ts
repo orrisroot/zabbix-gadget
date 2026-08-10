@@ -77,6 +77,7 @@ export function useTooltip({ priorityLabel, serverLabel, count, colorClass, bgCo
         const isVisible = await tooltipWin.isVisible();
         if (forceUpdateContent || !isVisible) {
           await emit('update-tooltip', {
+            token: tokenRef.current,
             label: priorityLabel,
             serverLabel,
             count,
@@ -101,9 +102,9 @@ export function useTooltip({ priorityLabel, serverLabel, count, colorClass, bgCo
   const handleMouseEnter = useCallback(
     async (e: MouseEvent) => {
       if (count === 0) return;
-      // Claim the active token for this cell before showing the tooltip
+      // Claim a fresh token so any earlier hide request can be invalidated.
       tokenRef.current = ++lastActiveToken;
-      await emit('cancel-hide-tooltip');
+      await emit('cancel-hide-tooltip', { token: tokenRef.current });
       await showTooltip(e, true);
     },
     [count, showTooltip],
@@ -112,9 +113,9 @@ export function useTooltip({ priorityLabel, serverLabel, count, colorClass, bgCo
   const handleMouseMove = useCallback(
     async (e: MouseEvent) => {
       if (count === 0) return;
-      // Refresh the token so this cell remains the active hover target
+      // Refresh the token so this cell remains the active hover target.
       tokenRef.current = ++lastActiveToken;
-      await emit('cancel-hide-tooltip');
+      await emit('cancel-hide-tooltip', { token: tokenRef.current });
       await showTooltip(e, false);
     },
     [count, showTooltip],
@@ -122,11 +123,9 @@ export function useTooltip({ priorityLabel, serverLabel, count, colorClass, bgCo
 
   const handleMouseLeave = useCallback(async () => {
     if (count === 0) return;
-    // Only request a hide if no other cell has become active since this cell was hovered.
-    // This prevents a stale cell from hiding the tooltip after the cursor moved on.
-    if (tokenRef.current === lastActiveToken) {
-      await emit('request-hide-tooltip');
-    }
+    // Carry the cell token so the panel can discard this hide request if a
+    // newer cell has already claimed the tooltip.
+    await emit('request-hide-tooltip', { token: tokenRef.current });
   }, [count]);
 
   useEffect(() => {
