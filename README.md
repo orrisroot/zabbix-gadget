@@ -69,14 +69,14 @@ See [config/zabbix.toml.example](config/zabbix.toml.example) for a template.
 
 ## Trigger Severity Levels
 
-| Priority | Level | Color |
-|----------|-------|-------|
-| 0 | Not classified | Gray |
-| 1 | Information | Blue |
-| 2 | Warning | Yellow |
-| 3 | Average | Orange |
-| 4 | High | Dark orange |
-| 5 | Disaster | Red |
+| Priority | Level          | Color       |
+| -------- | -------------- | ----------- |
+| 0        | Not classified | Gray        |
+| 1        | Information    | Blue        |
+| 2        | Warning        | Yellow      |
+| 3        | Average        | Orange      |
+| 4        | High           | Dark orange |
+| 5        | Disaster       | Red         |
 
 ## Project Structure
 
@@ -115,6 +115,7 @@ npm run tauri build -- --no-bundle
 ```
 
 The compiled execution binary will be generated at:
+
 - **Linux / macOS**: `src-tauri/target/release/zabbix-gadget`
 - **Windows**: `src-tauri/target/release/zabbix-gadget.exe`
 
@@ -135,16 +136,20 @@ If these environment variables are missing or incorrect, the updater plugin will
 
 1. Configure the environment variables:
    - **Linux/macOS**:
+
      ```bash
      export TAURI_SIGNING_PRIVATE_KEY="your-private-key-content"
      export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="your-passphrase"
      ```
    - **Windows (PowerShell)**:
+
      ```powershell
      $env:TAURI_SIGNING_PRIVATE_KEY="your-private-key-content"
      $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD="your-passphrase"
      ```
+
 2. Run the build command:
+
    ```bash
    npm run tauri build
    ```
@@ -152,13 +157,14 @@ If these environment variables are missing or incorrect, the updater plugin will
 #### Custom Build/Fork Configuration (Generating New Keys)
 
 If you are compiling your own fork and want to generate new signing keys:
+
 1. Generate a new key pair using the Tauri CLI:
+
    ```bash
    npx tauri signer generate
    ```
 2. Update the public key `pubkey` field in `src-tauri/tauri.conf.json` under `plugins.updater`.
 3. Use the newly generated private key and passphrase as the `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` variables when building.
-
 
 ## License
 

@@ -1,9 +1,9 @@
-name: 'Publish Release'
+name: "Publish Release"
 
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   check-version:
@@ -29,29 +29,29 @@ jobs:
       matrix:
         include:
           # macOS (Universal binary: x86_64 & aarch64)
-          - platform: 'macos-latest'
-            args: '--target universal-apple-darwin'
-            target: 'universal-apple-darwin'
+          - platform: "macos-latest"
+            args: "--target universal-apple-darwin"
+            target: "universal-apple-darwin"
 
           # Windows x64
-          - platform: 'windows-latest'
-            args: ''
-            target: ''
+          - platform: "windows-latest"
+            args: ""
+            target: ""
 
           # Windows ARM64
-          - platform: 'windows-latest'
-            args: '--target aarch64-pc-windows-msvc'
-            target: 'aarch64-pc-windows-msvc'
+          - platform: "windows-latest"
+            args: "--target aarch64-pc-windows-msvc"
+            target: "aarch64-pc-windows-msvc"
 
           # Linux x64
-          - platform: 'ubuntu-22.04'
-            args: ''
-            target: ''
+          - platform: "ubuntu-22.04"
+            args: ""
+            target: ""
 
           # Linux ARM64
-          - platform: 'ubuntu-24.04-arm'
-            args: ''
-            target: ''
+          - platform: "ubuntu-24.04-arm"
+            args: ""
+            target: ""
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -62,7 +62,7 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: lts/*
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -72,7 +72,7 @@ jobs:
       - name: Rust Cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: "./src-tauri -> target"
 
       - name: Install dependencies (Linux only)
         if: startsWith(matrix.platform, 'ubuntu')
@@ -93,8 +93,8 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN: 1
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'zabbix-gadget ${{ github.ref_name }}'
-          releaseBody: 'See the assets to download this version and install.'
+          releaseName: "zabbix-gadget ${{ github.ref_name }}"
+          releaseBody: "See the assets to download this version and install."
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
