@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2026-11-19
+
+### Added
+
+- **Maintenance Filtering**: Exclude triggers suppressed during Zabbix maintenance periods (`problem.get` with `suppressed: false`, falling back to host `maintenance_status`).
+- **App Version Command**: Add `get_app_version` command and fetch the current version during update checks.
+
+### Changed
+
+- **Zabbix HTTP Client Reuse**: Share a pooled `reqwest::Client` in `ZabbixSessionStore` and validate non-2xx HTTP responses in `post_rpc`.
+- **Vite & Dependencies**: Update npm and Rust dependencies to their latest releases and migrate `vite.config.ts` from `__dirname` to `import.meta.dirname`.
+
+### Fixed
+
+- **Linux Transparent Window Rendering**: Use `WEBKIT_DMABUF_RENDERER_FORCE_SHM=1` on WebKitGTK 2.44+ (falling back to `WEBKIT_DISABLE_DMABUF_RENDERER=1` on older versions) to prevent transparent window flickering and disappearing on WebKitGTK 2.52+/2.54+ with NVIDIA GPUs.
+- **Tooltip Hide Race**: Tag tooltip hover events with monotonic activation tokens and ignore stale hide requests on the tooltip panel.
+- **Connection Editing**: Allow saving edits to existing connection targets without requiring a re-test.
+- **Updater Tray State**: Reset the tray menu to the default state on update check or install errors.
+
 ## [0.1.4] - 2026-07-28
 
 ### Added

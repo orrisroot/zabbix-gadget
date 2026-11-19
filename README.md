@@ -6,11 +6,13 @@ A modern desktop gadget for monitoring Zabbix server triggers, built with **Taur
 
 - **Real-time trigger monitoring**: Displays active triggers classified by severity level
 - **Trigger deduplication**: Filters out redundant lower-severity triggers using Zabbix dependencies (`skipDependent: true`)
+- **Maintenance filtering**: Excludes triggers suppressed during Zabbix maintenance periods (`problem.get` with `suppressed: false`, falling back to host `maintenance_status`)
 - **Multi-server support**: Monitors multiple Zabbix servers simultaneously
 - **Color-coded status**: Distinguishes 6 severity levels with distinct status colors
 - **Hover tooltips**: Shows detailed trigger information on hover
 - **Auto-refresh**: Automatically updates triggers at a configurable interval (default: 5 minutes)
-- **Frameless window**: Provides a semi-transparent, always-on-top window with automatic sizing that fits the content height
+- **Frameless window**: Provides a semi-transparent window with toggleable always-on-top mode and automatic height sizing that fits the content
+- **Theme support**: Supports System, Dark, and Light themes from the header toggle or Settings UI
 - **Custom context menu**: Provides quick access actions via right-click on the main window while restricting secondary windows
 - **System Tray support**: Runs in the background with tray menu actions for updates and visibility
 - **Settings UI**: Offers interactive configuration including host URL format validation and drag-and-drop server reordering
@@ -18,8 +20,8 @@ A modern desktop gadget for monitoring Zabbix server triggers, built with **Taur
 
 ## Prerequisites
 
-- Node.js 22+ (Active LTS)
-- Rust 1.77.2+ (stable)
+- Node.js 22.12+ (Active LTS)
+- Rust 1.90+ (stable)
 - System dependencies for Tauri (see [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/))
 
 ## Installation
@@ -90,14 +92,14 @@ See [config/zabbix.toml.example](config/zabbix.toml.example) for a template.
 # Start development server
 npm run tauri dev
 
-# Type check
-npx tsc --noEmit
+# Format and lint frontend code
+npm run check
 
-# Build frontend only
-npx vite build
+# Type check and build frontend
+npm run build
 
-# Check Rust code
-cd src-tauri && cargo check
+# Check, lint, and test Rust code
+cd src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 ```
 
 ## Building Release Artifacts
